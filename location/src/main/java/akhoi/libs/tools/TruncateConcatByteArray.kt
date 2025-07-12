@@ -1,29 +1,28 @@
 package akhoi.libs.tools
 
+import androidx.annotation.VisibleForTesting
 import kotlin.experimental.or
 import kotlin.math.min
 
 class TruncateConcatByteArray(capacity: Int) {
     val content = ByteArray(capacity)
-    private var bitIndex = 0
 
-    fun appendLong(value: Long, valueSize: Int) {
-        var byteIndex = bitIndex shr 3
-        var unalignedBits = 8 - (bitIndex and 7)
+    @VisibleForTesting
+    var position = 0
+    private set
 
-        var remainingSize = min(valueSize, 64)
-        while (remainingSize > 0 && byteIndex < content.size) {
-            content[byteIndex] = content[byteIndex] or
-                    (value shl (64 - remainingSize) ushr (64 - unalignedBits)).toByte()
-            ++byteIndex
-            bitIndex += min(remainingSize, unalignedBits)
-            remainingSize -= unalignedBits
-            unalignedBits = 8
+    fun appendInt(value: Int, size: Int) {
+        var byte = position shr 3
+        var unaligned = 8 - (position and 7)
+
+        var remaining = min(size, 32)
+        while (remaining > 0 && byte < content.size) {
+            content[byte] = content[byte] or
+                    (value shl (32 - remaining) ushr (32 - unaligned)).toByte()
+            position += min(remaining, unaligned)
+            remaining -= unaligned
+            unaligned = 8
+            ++byte
         }
     }
-
-    fun appendDouble(value: Double, valueSize: Int) = appendLong(
-        java.lang.Double.doubleToRawLongBits(value),
-        valueSize
-    )
 }

@@ -77,6 +77,7 @@ class MetadataProperties(locationDir: File, name: String) {
         return when (klazz) {
             String -> valueString
             Long -> valueString?.toLongOrNull()
+            Byte -> valueString?.toByteOrNull()
             else -> null
         } as T?
     }
