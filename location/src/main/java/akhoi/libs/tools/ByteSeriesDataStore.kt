@@ -1,6 +1,7 @@
 package akhoi.libs.tools
 
 import androidx.annotation.VisibleForTesting
+import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
@@ -17,11 +18,12 @@ class ByteSeriesDataStore(locationDir: File, name: String) {
 
     @Synchronized
     fun append(bytes: ByteArray) {
-        val fileOutStream = FileOutputStream(contentFile, true)
+        val bufferedOutStream =
+            BufferedOutputStream(FileOutputStream(contentFile, true), BUFFER_SIZE)
         try {
-            fileOutStream.write(bytes)
+            bufferedOutStream.write(bytes)
         } finally {
-            fileOutStream.close()
+            bufferedOutStream.close()
         }
     }
 
@@ -47,22 +49,21 @@ class ByteSeriesDataStore(locationDir: File, name: String) {
         val contentChannel = Files.newByteChannel(contentFile.toPath(), StandardOpenOption.READ)
         contentChannel.position(offset)
         val buffer = ByteBuffer.allocate(BUFFER_SIZE)
-        try {
-            while (resultBytesRead < resultSize) {
-                val bytesRead = contentChannel.read(buffer)
-                if (bytesRead <= 0) {
-                    break
-                }
-                val bytesToCopy = min(resultSize - resultBytesRead, bytesRead)
-                buffer.flip()
-                repeat(bytesToCopy) {
-                    result[resultBytesRead++] = buffer.get()
-                }
-                resultBytesRead += bytesToCopy
+        while (resultBytesRead < resultSize) {
+            val bytesRead = try {
+                contentChannel.read(buffer)
+            } finally {
+                contentChannel?.close()
             }
-        } finally {
-            contentChannel?.close()
+            if (bytesRead <= 0) {
+                break
+            }
+            val bytesToCopy = min(resultSize - resultBytesRead, bytesRead)
+            buffer.flip()
+            buffer.get(result, resultBytesRead, bytesToCopy)
+            resultBytesRead += bytesToCopy
         }
+
 
         return result
     }
