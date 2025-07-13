@@ -9,10 +9,10 @@ import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import kotlin.math.min
 
-class ByteSeriesDataStore(locationDir: File, name: String) {
+class ByteConcatDataStore(locationDir: File, name: String) {
     private val contentFile: File = File("$locationDir/$name")
 
-    fun initialize() {
+    init {
         contentFile.parentFile?.mkdirs()
     }
 
@@ -64,14 +64,17 @@ class ByteSeriesDataStore(locationDir: File, name: String) {
             resultBytesRead += bytesToCopy
         }
 
-
         return result
+    }
+
+    fun clear() {
+        contentFile.delete()
     }
 
     @VisibleForTesting
     var maxLimit = MAX_LIMIT
 
-    companion object {
+    companion object Companion {
         private const val BUFFER_SIZE = 512
         private const val MAX_LIMIT = 2 * BUFFER_SIZE
     }

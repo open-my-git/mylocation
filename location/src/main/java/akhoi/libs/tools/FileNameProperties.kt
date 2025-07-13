@@ -1,17 +1,16 @@
 package akhoi.libs.tools
 
-import androidx.annotation.VisibleForTesting
 import java.io.File
 import kotlin.reflect.KClass
 
-class MetadataProperties(locationDir: File, name: String) {
+class FileNameProperties(locationDir: File, name: String) {
     private val propsDir: File = File("$locationDir/$name")
     private val cache: LRUCache<String, Any> = LRUCache(100)
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> readCache(key: String): T? = cache[key] as? T
 
-    fun initialize() {
+    init {
         propsDir.mkdirs()
     }
 
@@ -83,9 +82,8 @@ class MetadataProperties(locationDir: File, name: String) {
     }
 
     @Synchronized
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun clear() {
         cache.clear()
-        propsDir.deleteRecursively()
+        propsDir.listFiles()?.forEach { it.deleteRecursively() }
     }
 }

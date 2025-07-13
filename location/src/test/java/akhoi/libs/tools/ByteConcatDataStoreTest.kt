@@ -9,18 +9,17 @@ import java.io.File
 import kotlin.io.path.createTempDirectory
 import kotlin.random.Random
 
-class ByteSeriesDataStoreTest {
+class ByteConcatDataStoreTest {
 
     private lateinit var tempDir: File
-    private lateinit var dataStore: ByteSeriesDataStore
+    private lateinit var dataStore: ByteConcatDataStore
 
     @Before
     fun setUp() {
         val tempDirPath = createTempDirectory()
         tempDir = File(tempDirPath.toString())
 
-        dataStore = ByteSeriesDataStore(tempDir, "test_store")
-        dataStore.initialize()
+        dataStore = ByteConcatDataStore(tempDir, "test_store")
     }
 
     @After
