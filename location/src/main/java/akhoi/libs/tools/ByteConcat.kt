@@ -28,4 +28,18 @@ class ByteConcat(capacity: Int) {
             remaining -= available
         }
     }
+
+    fun appendLong(value: Long, size: Int) {
+        if (size <= 32) {
+            appendInt(value.toInt(), size)
+        } else {
+            val maskedValue = value and (-1L shl size).inv()
+            appendInt((maskedValue shr 32).toInt(), size - 32)
+            appendInt(maskedValue.toInt(), 32)
+        }
+    }
+
+    fun align() {
+        position = (position + 7) and -8
+    }
 }

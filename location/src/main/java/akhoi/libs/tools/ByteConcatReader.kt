@@ -30,4 +30,8 @@ class ByteConcatReader(private val content: ByteArray) {
     fun reset() {
         position = 0
     }
+
+    fun align() {
+        position = (position + 7) and -8
+    }
 }

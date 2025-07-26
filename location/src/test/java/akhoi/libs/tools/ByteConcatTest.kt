@@ -130,5 +130,77 @@ class ByteConcatTest {
         assertContentEquals(byteArrayOf(0xE0.toByte()), byteConcat.content)
     }
 
+    @Test
+    fun testAlign_notYetAligned() {
+        val byteConcat = ByteConcat(3)
+        byteConcat.appendInt(1, 14)
+        assertEquals(14, byteConcat.position)
+        byteConcat.align()
+        assertEquals(16, byteConcat.position)
+    }
+
+    @Test
+    fun testAlign_alreadyAligned() {
+        val byteConcat = ByteConcat(3)
+        byteConcat.appendInt(1, 16)
+        assertEquals(16, byteConcat.position)
+        byteConcat.align()
+        assertEquals(16, byteConcat.position)
+    }
+
+    @Test
+    fun testAppendLong_positiveIntegerValue_integerSize() {
+        val byteConcatLong = ByteConcat(3)
+        byteConcatLong.appendLong(0x10460E10L, 17)
+        assertContentEquals(byteArrayFromInts(0x07, 0x08, 0x00), byteConcatLong.content)
+    }
+
+    @Test
+    fun testAppendLong_negativeIntegerValue_integerSize() {
+        val byteConcatLong = ByteConcat(3)
+        byteConcatLong.appendLong(-0x10460E10L, 17)
+        assertContentEquals(byteArrayFromInts(0xF8, 0xF8, 0x00), byteConcatLong.content)
+    }
+
+    @Test
+    fun testAppendLong_positiveLongValue_integerSize() {
+        val byteConcatLong = ByteConcat(4)
+        byteConcatLong.appendLong(0x1896014701634004, 25)
+        assertContentEquals(
+            byteArrayFromInts(0xB1, 0xA0, 0x02, 0x00),
+            byteConcatLong.content
+        )
+    }
+
+    @Test
+    fun testAppendLong_negativeLongValue_integerSize() {
+        val byteConcatLong = ByteConcat(4)
+        byteConcatLong.appendLong(-0x1896014701634004, 25)
+        assertContentEquals(
+            byteArrayFromInts(0x4E, 0x5F, 0xFE, 0x00),
+            byteConcatLong.content
+        )
+    }
+
+    @Test
+    fun testAppendLong_positiveLongValue_longSize() {
+        val byteConcatLong = ByteConcat(6)
+        byteConcatLong.appendLong(0x1896014701634004, 43)
+        assertContentEquals(
+            byteArrayFromInts(0x28, 0xE0, 0x2C, 0x68, 0x00, 0x80),
+            byteConcatLong.content
+        )
+    }
+
+    @Test
+    fun testAppendLong_negativeLongValue_longSize() {
+        val byteConcatLong = ByteConcat(6)
+        byteConcatLong.appendLong(-0x1896014701634004, 43)
+        assertContentEquals(
+            byteArrayFromInts(0xD7, 0x1F, 0xD3, 0x97, 0xFF, 0x80),
+            byteConcatLong.content
+        )
+    }
+
     private fun byteArrayFromInts(vararg ints: Int) = ints.map { it.toByte() }.toByteArray()
 }

@@ -4,6 +4,7 @@ import androidx.annotation.VisibleForTesting
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
@@ -18,12 +19,18 @@ class ByteConcatDataStore(locationDir: File, name: String) {
 
     @Synchronized
     fun append(bytes: ByteArray) {
-        val bufferedOutStream =
-            BufferedOutputStream(FileOutputStream(contentFile, true), BUFFER_SIZE)
+        val outStream = FileOutputStream(contentFile, true)
         try {
-            bufferedOutStream.write(bytes)
+            var total = 0
+            var len: Int
+            while (total < bytes.size) {
+                len = min(BUFFER_SIZE, bytes.size - total)
+                outStream.write(bytes, total, len)
+                total += len
+            }
+            outStream.flush()
         } finally {
-            bufferedOutStream.close()
+            outStream.close()
         }
     }
 
@@ -75,7 +82,7 @@ class ByteConcatDataStore(locationDir: File, name: String) {
     var maxLimit = MAX_LIMIT
 
     companion object Companion {
-        private const val BUFFER_SIZE = 512
+        private const val BUFFER_SIZE = 1024
         private const val MAX_LIMIT = 2 * BUFFER_SIZE
     }
 }

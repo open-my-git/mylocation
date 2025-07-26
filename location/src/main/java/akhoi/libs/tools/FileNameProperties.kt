@@ -5,7 +5,7 @@ import kotlin.reflect.KClass
 
 class FileNameProperties(locationDir: File, name: String) {
     private val propsDir: File = File("$locationDir/$name")
-    private val cache: LRUCache<String, Any> = LRUCache(100)
+    private val cache: LRUCache<String, Any> = LRUCache(CACHE_SIZE)
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> readCache(key: String): T? = cache[key] as? T
@@ -75,8 +75,16 @@ class FileNameProperties(locationDir: File, name: String) {
         val valueString = keyDir.listFiles()?.firstOrNull()?.name
         return when (klazz) {
             String -> valueString
-            Long -> valueString?.toLongOrNull()
             Byte -> valueString?.toByteOrNull()
+            UByte -> valueString?.toUByteOrNull()
+            Short -> valueString?.toShortOrNull()
+            UShort -> valueString?.toUShortOrNull()
+            Int -> valueString?.toIntOrNull()
+            UInt -> valueString?.toUIntOrNull()
+            Long -> valueString?.toLongOrNull()
+            ULong -> valueString?.toULongOrNull()
+            Float -> valueString?.toFloatOrNull()
+            Double -> valueString?.toDoubleOrNull()
             else -> null
         } as T?
     }
@@ -85,5 +93,9 @@ class FileNameProperties(locationDir: File, name: String) {
     fun clear() {
         cache.clear()
         propsDir.listFiles()?.forEach { it.deleteRecursively() }
+    }
+
+    companion object {
+        private const val CACHE_SIZE = 100
     }
 }
