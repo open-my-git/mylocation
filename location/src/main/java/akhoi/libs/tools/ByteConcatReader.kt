@@ -27,6 +27,19 @@ class ByteConcatReader(private val content: ByteArray) {
         return result
     }
 
+    fun readLong(size: Int): Long {
+        val value: Long
+        if (size <= 32) {
+            value = readInt(size).toLong() and (-1L shl size).inv()
+        } else {
+            val msBitsSize = size - 32
+            val msBits = readInt(msBitsSize).toLong() and (-1L shl msBitsSize).inv()
+            val lsBits = readInt(32).toLong() and 0xFFFFFFFF
+            value = msBits shl 32 or lsBits
+        }
+        return value
+    }
+
     fun reset() {
         position = 0
     }
