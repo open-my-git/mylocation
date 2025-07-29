@@ -40,6 +40,11 @@ class ByteConcatReader(private val content: ByteArray) {
         return value
     }
 
+    fun readDouble(size: Int): Double {
+        val longValue = readLong(size)
+        return java.lang.Double.longBitsToDouble(longValue)
+    }
+
     fun reset() {
         position = 0
     }

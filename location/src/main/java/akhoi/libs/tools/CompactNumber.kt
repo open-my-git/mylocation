@@ -1,6 +1,7 @@
 package akhoi.libs.tools
 
 import kotlin.math.max
+import kotlin.math.min
 
 @Throws(IllegalArgumentException::class)
 fun compactDouble(number: Double, eSize: Int, sSize: Int): Long {
@@ -10,20 +11,44 @@ fun compactDouble(number: Double, eSize: Int, sSize: Int): Long {
     val actualESize = max(eSize, 0)
     val actualSSize = max(sSize, 1)
     val raw = java.lang.Double.doubleToRawLongBits(number)
-    val compExp: Long
+    val exponent: Long
     if (actualESize == 0) {
-        compExp = 0L
+        exponent = 0L
     } else {
-        val exponent = (raw shr 52) and 0x7FF
+        val rawExpMask = 0x7FFL
+        val rawExp = (raw shr 52) and rawExpMask
         val expMask = (-1L shl actualESize).inv()
-        compExp = when (exponent) {
+        val bias = (1L shl (actualESize - 1)) - 1
+        exponent = when (rawExp) {
             0L -> 0L
-            0x7FFL -> exponent and expMask
-            else -> ((exponent - 1023) and expMask) + (1 shl (actualESize - 1)) - 1
+            rawExpMask -> expMask
+            else -> ((rawExp - 1023) and expMask) + bias
         }
     }
 
     val significand = raw shl 12 ushr (64 - actualSSize)
     val sign = raw ushr 63
-    return (((sign shl actualESize) or compExp) shl actualSSize) or significand
+    return sign shl actualESize or exponent shl actualSSize or significand
+}
+
+fun restoreDouble(source: Long, expLen: Int, significandLen: Int): Double {
+    val actualExpLen = min(max(0, expLen), 11)
+    val actualSfLen = min(max(0, significandLen), 52)
+    val resExponent: Long
+    if (actualExpLen == 0) {
+        resExponent = 0
+    } else {
+        val expMask = (-1L shl actualExpLen).inv()
+        val exponent = source shr actualSfLen and expMask
+        val bias = (1L shl (actualExpLen - 1)) - 1
+        resExponent = when (exponent) {
+            0L -> 0L
+            expMask -> 0x7FF
+            else -> exponent - bias + 1023
+        }
+    }
+    val significand = source and (-1L shl actualSfLen).inv()
+    val sign = source shr (actualExpLen + actualSfLen)
+    val raw = sign shl 11 or resExponent shl 52 or (significand shl 52 - actualSfLen)
+    return java.lang.Double.longBitsToDouble(raw)
 }
