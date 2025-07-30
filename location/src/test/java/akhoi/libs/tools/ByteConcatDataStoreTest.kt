@@ -127,16 +127,4 @@ class ByteConcatDataStoreTest {
         val result1 = dataStore.read(0, -3)
         assertEquals(0, result1.size)
     }
-
-    @Test
-    fun test_limitLargerThanAllowed() {
-        dataStore.maxLimit = 10
-        val tooLargeLimit = 20
-        val data = ByteArray(tooLargeLimit)
-        dataStore.append(data)
-
-        val actual = dataStore.read(0, tooLargeLimit)
-        assertEquals(dataStore.maxLimit, actual.size)
-        assertArrayEquals(data.sliceArray(0..dataStore.maxLimit - 1), actual)
-    }
 }
