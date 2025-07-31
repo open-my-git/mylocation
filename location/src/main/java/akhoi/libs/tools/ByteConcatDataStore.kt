@@ -26,23 +26,19 @@ class ByteConcatDataStore(locationDir: File, name: String) {
     }
 
     @Synchronized
-    fun read(offset: Long, limit: Int): ByteArray {
+    fun read(offset: Long, count: Int): ByteArray {
         val contentLength = if (contentFile.exists()) {
             contentFile.length()
         } else {
-            0
+            return ByteArray(0)
         }
-        if (offset >= contentLength ||
-            offset < 0 ||
-            limit <= 0 ||
-            limit > contentLength
-        ) {
+        if (offset >= contentLength || offset < 0 || count <= 0) {
             return ByteArray(0)
         }
 
         val result = mutableListOf<Byte>()
         contentFile.inputStream().use { inpStream ->
-            val total = min(limit, (contentLength - offset).toInt())
+            val total = min(count, (contentLength - offset).toInt())
             val buffer = ByteArray(min(BUFFER_SIZE, total))
             inpStream.skip(offset)
             while (result.size < total) {

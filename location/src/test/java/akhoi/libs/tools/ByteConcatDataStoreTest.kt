@@ -1,25 +1,24 @@
 package akhoi.libs.tools
 
 import org.junit.After
-import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import java.io.File
-import kotlin.io.path.createTempDirectory
 import kotlin.random.Random
+import kotlin.test.assertContentEquals
 
 class ByteConcatDataStoreTest {
 
-    private lateinit var tempDir: File
+    private lateinit var contentDir: File
     private lateinit var dataStore: ByteConcatDataStore
+    private lateinit var tempDir: File
 
     @Before
     fun setUp() {
-        val tempDirPath = createTempDirectory()
-        tempDir = File(tempDirPath.toString())
-
-        dataStore = ByteConcatDataStore(tempDir, "test_store")
+        contentDir = File("src/test/resources/akhoi/libs/tools/ByteConcatDataStoreTest")
+        tempDir = File("$contentDir/temp")
+        tempDir.mkdirs()
     }
 
     @After
@@ -28,103 +27,103 @@ class ByteConcatDataStoreTest {
     }
 
     @Test
-    fun test_appendAndReadAll() {
+    fun testAppend_singleAppend() {
+        dataStore = ByteConcatDataStore(tempDir, "testAppend_singleCall")
+
         val data = byteArrayOf(72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100)
         dataStore.append(data)
 
-        val actual = dataStore.read(0, data.size)
-        assertArrayEquals(data, actual)
+        val actual = File("$tempDir/testAppend_singleCall").readBytes()
+        assertContentEquals(data, actual)
     }
 
     @Test
-    fun testAppendAndReadTheMiddlePart() {
-        val data = byteArrayOf(72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100)
-        dataStore.append(data)
+    fun testAppend_multipleCalls() {
+        dataStore = ByteConcatDataStore(tempDir, "testAppend_multipleAppends")
+        val data1 = byteArrayOf(72, 101, 108, 108, 111)
+        val data2 = byteArrayOf(32, 87, 111, 114, 108, 100)
 
+        dataStore.append(data1)
+        dataStore.append(data2)
+
+        val contentFile = File("$tempDir/testAppend_multipleAppends")
+        val expected = contentFile.readBytes()
+        assertContentEquals(expected, data1 + data2)
+    }
+
+    @Test
+    fun testRead_wholeFileContent() {
+        dataStore = ByteConcatDataStore(contentDir, "test_content")
+        val contentFile = File("$contentDir/test_content")
+        val actual = dataStore.read(0, contentFile.length().toInt())
+        val expected = contentFile.readBytes()
+        assertContentEquals(expected, actual)
+    }
+
+    @Test
+    fun testRead_withOffset() {
+        dataStore = ByteConcatDataStore(contentDir, "test_content")
         val actual = dataStore.read(3, 4)
-        assertArrayEquals(byteArrayOf(108, 111, 32, 87), actual)
+        assertContentEquals("Loca".toByteArray(), actual)
     }
 
     @Test
-    fun test_appendTwice_readAllAtOnce() {
-        val data1 = byteArrayOf(72, 101, 108, 108, 111)
-        val data2 = byteArrayOf(32, 87, 111, 114, 108, 100)
+    fun testRead_multipleCalls() {
+        dataStore = ByteConcatDataStore(contentDir, "test_content")
 
-        dataStore.append(data1)
-        dataStore.append(data2)
+        var actual = dataStore.read(3, 3)
+        assertContentEquals("Loc".toByteArray(), actual)
 
-        val actual = dataStore.read(0, data1.size + data2.size)
-        assertArrayEquals(byteArrayOf(72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100), actual)
+        actual = dataStore.read(8, 3)
+        assertContentEquals("ion".toByteArray(), actual)
     }
 
     @Test
-    fun test_appendTwice_readTwice() {
-        val data1 = byteArrayOf(72, 101, 108, 108, 111)
-        val data2 = byteArrayOf(32, 87, 111, 114, 108, 100)
-
-        dataStore.append(data1)
-        dataStore.append(data2)
-
-        var result = dataStore.read(3, 3)
-        assertArrayEquals(byteArrayOf(108, 111, 32), result)
-
-        result = dataStore.read(8, 3)
-        assertArrayEquals(byteArrayOf(114, 108, 100), result)
+    fun testRead_beyondContentLength() {
+        dataStore = ByteConcatDataStore(contentDir, "test_content")
+        val contentFile = File("$contentDir/test_content")
+        val actual = dataStore.read(0, (contentFile.length() + 1).toInt())
+        assertContentEquals(contentFile.readBytes(), actual)
     }
 
     @Test
-    fun test_randomData() {
-        val randomData = Random.nextBytes(128)
-        dataStore.append(randomData)
-        val offset = Random.nextInt(128)
-        val limit = Random.nextInt((128 - offset))
-        val actual = dataStore.read(offset.toLong(), limit)
-        val expected = randomData.sliceArray(offset..(offset + limit - 1))
-        assertArrayEquals(expected, actual)
+    fun testRead_lastPosition() {
+        dataStore = ByteConcatDataStore(contentDir, "test_content")
+        val contentLength = File("$contentDir/test_content").length()
+        val actual = dataStore.read(contentLength - 1, 1)
+        assertContentEquals("n".toByteArray(), actual)
     }
 
     @Test
-    fun test_offsetLargerThanContent() {
-        val data = byteArrayOf(72, 101, 108, 108, 111)
-        dataStore.append(data)
-
-        val actual = dataStore.read(10, 5)
+    fun testRead_zeroCount() {
+        dataStore = ByteConcatDataStore(contentDir, "test_content")
+        val actual = dataStore.read(3, 0)
         assertEquals(0, actual.size)
     }
 
     @Test
-    fun test_negativeOffset() {
-        val data = byteArrayOf(72, 101, 108, 108, 111)
-        dataStore.append(data)
+    fun testRead_invalidBoundaries() {
+        dataStore = ByteConcatDataStore(contentDir, "test_content")
+        val contentFile = File("$contentDir/test_content")
+        var actual = dataStore.read(0, 0)
+        assertContentEquals(ByteArray(0), actual)
 
-        val result1 = dataStore.read(-1, 5)
-        assertEquals(0, result1.size)
+        actual = dataStore.read(-1, 3)
+        assertContentEquals(ByteArray(0), actual)
+
+        actual = dataStore.read(contentFile.length(), 3)
+        assertContentEquals(ByteArray(0), actual)
     }
 
     @Test
-    fun test_offsetEqualsToContentLength() {
-        val data = byteArrayOf(72, 101, 108, 108, 111)
-        dataStore.append(data)
-
-        val result1 = dataStore.read(6, 5)
-        assertEquals(0, result1.size)
-    }
-
-    @Test
-    fun test_zeroLimit() {
-        val data = byteArrayOf(72, 101, 108, 108, 111)
-        dataStore.append(data)
-
-        val result1 = dataStore.read(3, 0)
-        assertEquals(0, result1.size)
-    }
-
-    @Test
-    fun test_negativeLimit() {
-        val data = byteArrayOf(72, 101, 108, 108, 111)
-        dataStore.append(data)
-
-        val result1 = dataStore.read(0, -3)
-        assertEquals(0, result1.size)
+    fun testAppendAndRead_randomData() {
+        dataStore = ByteConcatDataStore(tempDir, "testAppendAndRead_randomData")
+        val randomData = Random.nextBytes(128)
+        dataStore.append(randomData)
+        val offset = Random.nextInt(128)
+        val count = Random.nextInt((128 - offset))
+        val actual = dataStore.read(offset.toLong(), count)
+        val expected = randomData.sliceArray(offset..(offset + count - 1))
+        assertContentEquals(expected, actual)
     }
 }
