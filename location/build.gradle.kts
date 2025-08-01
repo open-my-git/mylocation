@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -40,6 +41,11 @@ kotlin {
 dependencies {
     implementation(libs.playservices.location)
     implementation(libs.kotlinx.coroutines.playservices)
+
+    implementation(libs.google.maps.utils)
+
+    implementation(libs.dagger)
+    ksp(libs.dagger.compiler)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)

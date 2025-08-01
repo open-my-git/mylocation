@@ -1,10 +1,10 @@
-package akhoi.libs.location
+package akhoi.libs.mlct.location
 
-import akhoi.libs.location.model.Location
-import akhoi.libs.location.model.LocationRequest
+import akhoi.libs.mlct.location.model.Location
+import akhoi.libs.mlct.location.model.LocationRequest
 import kotlinx.coroutines.flow.Flow
 
-interface LocationSource {
+internal interface LocationSource {
     suspend fun getLastLocation(): Location?
     fun getLastLocationFlow(): Flow<Location>
     fun getLocationUpdates(request: LocationRequest): Flow<List<Location>>

@@ -1,9 +1,7 @@
 package akhoi.apps.myloc
 
-import akhoi.libs.location.LocationSourceFactory
 import org.junit.Test
 
-import org.junit.Assert.*
 import org.mockito.Mockito.mock
 
 /**

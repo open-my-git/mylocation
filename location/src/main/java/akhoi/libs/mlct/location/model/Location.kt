@@ -1,10 +1,10 @@
-package akhoi.libs.location.model
+package akhoi.libs.mlct.location.model
 
 data class Location(
     /**
-     * Miliseconds since epoch.
+     * Miliseconds since boot.
      */
-    val time: Long,
+    val elapsedTime: Long,
 
     /**
      * Latitude and longitude in degrees.
@@ -17,8 +17,5 @@ data class Location(
      */
     val altitude: Double,
 
-    /**
-     * Speed in m/s.
-     */
-    val speed: Double,
+    val speed: Float = 0f
 )

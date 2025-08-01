@@ -1,4 +1,4 @@
-package akhoi.libs.location.model
+package akhoi.libs.mlct.location.model
 
 data class LocationRequest(
     val interval: Long = 0L,

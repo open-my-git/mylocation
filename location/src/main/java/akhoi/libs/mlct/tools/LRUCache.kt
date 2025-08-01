@@ -1,4 +1,4 @@
-package akhoi.libs.tools
+package akhoi.libs.mlct.tools
 
 class LRUCache<K, V>(private val capacity: Int) {
     private val cache = HashMap<K, Node<K, V>>()

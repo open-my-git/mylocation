@@ -1,4 +1,4 @@
-package akhoi.libs.tools
+package akhoi.libs.mlct.tools
 
 import kotlin.math.min
 

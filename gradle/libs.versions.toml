@@ -10,11 +10,15 @@ material = "1.12.0"
 
 kotlinx-coroutines = "1.10.2"
 
-androidx-datastore = "1.1.7"
-
 playservices-location = "21.3.0"
 
 mockito-kotlin = "5.4.0"
+
+google-maps-utils = "3.14.0"
+
+dagger = "2.57"
+
+ksp = "2.2.0-2.0.2"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -31,10 +35,13 @@ androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "j
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
-androidx-datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "androidx-datastore" }
+google-maps-utils = { module = "com.google.maps.android:android-maps-utils", version.ref = "google-maps-utils" }
+
+dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
+dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

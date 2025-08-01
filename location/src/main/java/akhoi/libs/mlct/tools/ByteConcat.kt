@@ -1,4 +1,4 @@
-package akhoi.libs.tools
+package akhoi.libs.mlct.tools
 
 import androidx.annotation.VisibleForTesting
 import kotlin.experimental.or

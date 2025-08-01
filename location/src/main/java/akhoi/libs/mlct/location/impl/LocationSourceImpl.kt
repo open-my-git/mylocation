@@ -1,8 +1,8 @@
-package akhoi.libs.location.impl
+package akhoi.libs.mlct.location.impl
 
-import akhoi.libs.location.LocationSource
-import akhoi.libs.location.model.Location
-import akhoi.libs.location.model.LocationRequest
+import akhoi.libs.mlct.location.LocationSource
+import akhoi.libs.mlct.location.model.Location
+import akhoi.libs.mlct.location.model.LocationRequest
 import android.Manifest
 import android.content.Context
 import android.location.Location as AndroidLocation
@@ -22,12 +22,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 import com.google.android.gms.location.LocationRequest as AndroidLocationRequest
 
-internal class LocationSourceImpl(
-    context: Context,
-    private val locationClient: FusedLocationProviderClient =
-        LocationServices.getFusedLocationProviderClient(context),
+internal class LocationSourceImpl @Inject constructor(
+    private val locationClient: FusedLocationProviderClient,
 ) : LocationSource {
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
@@ -85,11 +84,11 @@ internal class LocationSourceImpl(
 
     private fun AndroidLocation.toLocation(): Location =
         Location(
-            time,
+            elapsedRealtimeNanos / 1000000,
             latitude,
             longitude,
             altitude,
-            speed.toDouble()
+            speed
         )
 
     companion object {

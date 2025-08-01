@@ -1,5 +1,6 @@
 package akhoi.libs.tools
 
+import akhoi.libs.mlct.tools.FileNameProperties
 import org.junit.After
 import org.junit.Before
 import java.io.File

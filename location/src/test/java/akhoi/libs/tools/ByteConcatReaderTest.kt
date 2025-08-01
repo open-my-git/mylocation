@@ -1,5 +1,6 @@
 package akhoi.libs.tools
 
+import akhoi.libs.mlct.tools.ByteConcatReader
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

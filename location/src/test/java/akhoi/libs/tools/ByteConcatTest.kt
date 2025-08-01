@@ -1,5 +1,6 @@
 package akhoi.libs.tools
 
+import akhoi.libs.mlct.tools.ByteConcat
 import org.junit.Test
 import kotlin.random.Random
 import kotlin.test.assertContentEquals
