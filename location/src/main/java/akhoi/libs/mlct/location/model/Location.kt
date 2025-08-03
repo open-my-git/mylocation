@@ -17,5 +17,5 @@ data class Location(
      */
     val altitude: Double,
 
-    val speed: Float = 0f
+    val speed: Float,
 )
