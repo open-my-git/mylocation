@@ -17,7 +17,7 @@ import java.io.FileOutputStream
 import javax.inject.Inject
 import kotlin.collections.set
 
-internal class TrackingManagerImpl @Inject constructor(private val context: Context) : TrackingManager {
+internal class TrackingManagerImpl(private val context: Context) : TrackingManager {
     private val rootDir by lazy { File("${context.filesDir}/$ROOT_DIR") }
 
     private val properties by lazy { FileNameProperties(rootDir, "properties") }
@@ -27,35 +27,19 @@ internal class TrackingManagerImpl @Inject constructor(private val context: Cont
 
     private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    override val status: @TrackingStatus Int
-        get() = properties[KEY_STATUS] ?: TrackingStatus.STOPPED
-
-    override val startTimeElapsed: Long?
-        get() = properties[KEY_START_TIME_EL]
-
-    override val startTimeCalendar: Long?
-        get() = properties[KEY_START_TIME_CA]
-
-    override val currentSpeed: Float
-        get() = properties[KEY_SPEED] ?: 0.0f
-
-    override var routeDistance: Double
-        get() = properties[KEY_ROUTE_DISTANCE] ?: 0.0
-        set(value) { properties[KEY_ROUTE_DISTANCE] = value }
-
-    override var lastActiveTime: Long?
-        get() = properties[KEY_LAST_ACTIVE_TIME]
-        set(value) { properties[KEY_LAST_ACTIVE_TIME] = value }
-
-    override var pausedDuration: Long
-        get() = properties[KEY_PAUSED_DURATION] ?: 0L
-        set(value) { properties[KEY_PAUSED_DURATION] = value }
-
     private val locationSerializers = mutableMapOf<Byte, LocationSerializer>()
 
     private val distanceCalculator = DistanceCalculator()
 
     private var tickerJob: Job? = null
+
+    override fun getStatus(): @TrackingStatus Int = properties[KEY_STATUS] ?: TrackingStatus.STOPPED
+    override fun getElapsedStartTime(): Long? = properties[KEY_START_TIME_EL]
+    override fun getCalendarStartTime(): Long? = properties[KEY_START_TIME_CA]
+    override fun getCurrentSpeed(): Float = properties[KEY_SPEED] ?: 0.0f
+    override fun getRouteDistance(): Double = properties[KEY_ROUTE_DISTANCE] ?: 0.0
+    override fun getLastActiveTime(): Long? = properties[KEY_LAST_ACTIVE_TIME]
+    override fun getPausedDuration(): Long = properties[KEY_PAUSED_DURATION] ?: 0L
 
     override fun start() {
         properties.put(KEY_START_TIME_CA, System.currentTimeMillis())
@@ -88,7 +72,8 @@ internal class TrackingManagerImpl @Inject constructor(private val context: Cont
     }
 
     private fun addPausedDuration() {
-        pausedDuration += SystemClock.elapsedRealtime() - (lastActiveTime ?: 0L)
+        properties[KEY_PAUSED_DURATION] =
+            getPausedDuration() + SystemClock.elapsedRealtime() - (getLastActiveTime() ?: 0L)
         updateLatestActiveTime()
     }
 
@@ -99,7 +84,7 @@ internal class TrackingManagerImpl @Inject constructor(private val context: Cont
     }
 
     private fun updateLatestActiveTime() {
-        lastActiveTime = SystemClock.elapsedRealtime()
+        properties[KEY_LAST_ACTIVE_TIME] = SystemClock.elapsedRealtime()
     }
 
     override suspend fun recordLocations(locations: List<Location>) {
@@ -116,7 +101,7 @@ internal class TrackingManagerImpl @Inject constructor(private val context: Cont
 
     private fun addRouteDistance(locations: List<Location>) {
         val distanceToAdd = distanceCalculator.calculateDistanceTo(locations)
-        routeDistance += distanceToAdd
+        properties[KEY_ROUTE_DISTANCE] = getRouteDistance() + distanceToAdd
     }
 
     private fun openLocationFile() {

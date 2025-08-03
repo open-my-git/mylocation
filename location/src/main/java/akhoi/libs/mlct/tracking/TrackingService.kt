@@ -86,7 +86,7 @@ class TrackingService : Service() {
         if (intent == null) {
             mainScope.launch {
                 // service restarts after the process was killed
-                if (trackingManager.status == TrackingStatus.RESUMED) {
+                if (trackingManager.getStatus() == TrackingStatus.RESUMED) {
                     onActionResume(null)
                 }
             }

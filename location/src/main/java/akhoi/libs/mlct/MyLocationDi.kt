@@ -3,6 +3,7 @@ package akhoi.libs.mlct
 import akhoi.libs.mlct.location.LocationSource
 import akhoi.libs.mlct.location.impl.LocationSourceImpl
 import akhoi.libs.mlct.tracking.TrackingManager
+import akhoi.libs.mlct.tracking.TrackingManagerFactory
 import akhoi.libs.mlct.tracking.TrackingService
 import akhoi.libs.mlct.tracking.impl.TrackingManagerImpl
 import android.content.Context
@@ -28,8 +29,11 @@ internal interface LocationModule {
 
 @Module
 internal interface TrackingModule {
-    @Binds
-    fun trackingManager(impl: TrackingManagerImpl): TrackingManager
+    companion object {
+        @Provides
+        fun trackingManager(context: Context): TrackingManager =
+            TrackingManagerFactory.createInstance(context)
+    }
 }
 
 @Component(modules = [LocationModule::class, TrackingModule::class])

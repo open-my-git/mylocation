@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "akhoi.libs.location"
+    namespace = "akhoi.libs.mlct"
     compileSdk = 36
 
     defaultConfig {
