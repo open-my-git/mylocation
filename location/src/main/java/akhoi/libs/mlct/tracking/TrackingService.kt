@@ -1,9 +1,13 @@
 package akhoi.libs.mlct.tracking
 
 import akhoi.libs.mlct.DaggerMyLocationComponent
+import akhoi.libs.mlct.TrackingModule.Companion.TRACKING_STATE_PREFS
 import akhoi.libs.mlct.location.LocationSource
 import akhoi.libs.mlct.location.model.Location
 import akhoi.libs.mlct.location.model.LocationRequest
+import akhoi.libs.mlct.tools.KeyValuePreferences
+import akhoi.libs.mlct.tools.contains
+import akhoi.libs.mlct.tracking.TrackingStateKeys.KEY_STATUS
 import akhoi.libs.mlct.tracking.impl.TrackingStatus
 import android.annotation.SuppressLint
 import android.app.ActivityManager
@@ -32,6 +36,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import javax.inject.Named
 
 class TrackingService : Service() {
 
@@ -40,6 +45,10 @@ class TrackingService : Service() {
 
     @Inject
     internal lateinit var trackingManager: TrackingManager
+
+    @Inject
+    @Named(TRACKING_STATE_PREFS)
+    internal lateinit var trackingStatePreferences: KeyValuePreferences
 
     private val exceptionHandler = CoroutineExceptionHandler { _, exception ->
         Log.e("TrackingService", "exceptionHandler", exception)
@@ -86,7 +95,7 @@ class TrackingService : Service() {
         if (intent == null) {
             mainScope.launch {
                 // service restarts after the process was killed
-                if (trackingManager.getStatus() == TrackingStatus.RESUMED) {
+                if (trackingStatePreferences.contains(KEY_STATUS, TrackingStatus.RESUMED)) {
                     onActionResume(null)
                 }
             }

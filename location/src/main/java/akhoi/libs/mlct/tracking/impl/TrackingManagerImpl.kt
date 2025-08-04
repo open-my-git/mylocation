@@ -1,9 +1,18 @@
 package akhoi.libs.mlct.tracking.impl
 
 import akhoi.libs.mlct.location.model.Location
-import akhoi.libs.mlct.tools.FileNameProperties
+import akhoi.libs.mlct.tools.KeyValuePreferences
 import akhoi.libs.mlct.tools.flowTimer
+import akhoi.libs.mlct.tools.get
 import akhoi.libs.mlct.tracking.TrackingManager
+import akhoi.libs.mlct.tracking.TrackingStateKeys.KEY_CA_START_TIME
+import akhoi.libs.mlct.tracking.TrackingStateKeys.KEY_DATA_VERSION
+import akhoi.libs.mlct.tracking.TrackingStateKeys.KEY_EL_START_TIME
+import akhoi.libs.mlct.tracking.TrackingStateKeys.KEY_LAST_ACTIVE_TIME
+import akhoi.libs.mlct.tracking.TrackingStateKeys.KEY_PAUSED_DURATION
+import akhoi.libs.mlct.tracking.TrackingStateKeys.KEY_ROUTE_DISTANCE
+import akhoi.libs.mlct.tracking.TrackingStateKeys.KEY_SPEED
+import akhoi.libs.mlct.tracking.TrackingStateKeys.KEY_STATUS
 import android.content.Context
 import android.os.SystemClock
 import com.google.android.gms.maps.model.LatLng
@@ -14,13 +23,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import java.io.File
 import java.io.FileOutputStream
-import javax.inject.Inject
-import kotlin.collections.set
 
-internal class TrackingManagerImpl(private val context: Context) : TrackingManager {
-    private val rootDir by lazy { File("${context.filesDir}/$ROOT_DIR") }
-
-    private val properties by lazy { FileNameProperties(rootDir, "properties") }
+internal class TrackingManagerImpl(
+    context: Context,
+    private val stateProperties: KeyValuePreferences
+) : TrackingManager {
+    private val rootDir by lazy { File("${context.filesDir}/${DataFiles.DIR_ROOT}/$DATA_DIR") }
 
     private val locationFile: File = File("$rootDir/locations")
     private var locationOutputStream: FileOutputStream? = null
@@ -33,31 +41,23 @@ internal class TrackingManagerImpl(private val context: Context) : TrackingManag
 
     private var tickerJob: Job? = null
 
-    override fun getStatus(): @TrackingStatus Int = properties[KEY_STATUS] ?: TrackingStatus.STOPPED
-    override fun getElapsedStartTime(): Long? = properties[KEY_START_TIME_EL]
-    override fun getCalendarStartTime(): Long? = properties[KEY_START_TIME_CA]
-    override fun getCurrentSpeed(): Float = properties[KEY_SPEED] ?: 0.0f
-    override fun getRouteDistance(): Double = properties[KEY_ROUTE_DISTANCE] ?: 0.0
-    override fun getLastActiveTime(): Long? = properties[KEY_LAST_ACTIVE_TIME]
-    override fun getPausedDuration(): Long = properties[KEY_PAUSED_DURATION] ?: 0L
-
     override fun start() {
-        properties.put(KEY_START_TIME_CA, System.currentTimeMillis())
+        stateProperties[KEY_CA_START_TIME] = System.currentTimeMillis()
         val startTime = SystemClock.elapsedRealtime()
-        properties.put(KEY_START_TIME_EL, startTime)
-        properties.put(KEY_DATA_VERSION, DATA_VERSION)
+        stateProperties[KEY_EL_START_TIME] = startTime
+        stateProperties[KEY_DATA_VERSION] = DATA_VERSION
 
         locationSerializers.clear()
         locationSerializers[DATA_V1] = TrackingLocationSerializerV1(startTime)
 
-        properties[KEY_STATUS] = TrackingStatus.RESUMED
+        stateProperties[KEY_STATUS] = TrackingStatus.RESUMED
         openLocationFile()
         updateLatestActiveTime()
         startTicker()
     }
 
     override fun pause() {
-        properties[KEY_STATUS] = TrackingStatus.PAUSED
+        stateProperties[KEY_STATUS] = TrackingStatus.PAUSED
         updateLatestActiveTime()
         closeLocationFile()
         distanceCalculator.clearLastComputedLocation()
@@ -67,24 +67,26 @@ internal class TrackingManagerImpl(private val context: Context) : TrackingManag
     override fun resume() {
         openLocationFile()
         addPausedDuration()
-        properties[KEY_STATUS] = TrackingStatus.RESUMED
+        stateProperties[KEY_STATUS] = TrackingStatus.RESUMED
         startTicker()
     }
 
     private fun addPausedDuration() {
-        properties[KEY_PAUSED_DURATION] =
-            getPausedDuration() + SystemClock.elapsedRealtime() - (getLastActiveTime() ?: 0L)
+        val pausedDuration = stateProperties[KEY_PAUSED_DURATION] ?: 0L
+        val lastActiveTime = stateProperties[KEY_LAST_ACTIVE_TIME] ?: 0L
+        stateProperties[KEY_PAUSED_DURATION] =
+            pausedDuration + SystemClock.elapsedRealtime() - lastActiveTime
         updateLatestActiveTime()
     }
 
     override fun stop() {
-        properties[KEY_STATUS] = TrackingStatus.STOPPED
+        stateProperties[KEY_STATUS] = TrackingStatus.STOPPED
         updateLatestActiveTime()
         tickerJob?.cancel()
     }
 
     private fun updateLatestActiveTime() {
-        properties[KEY_LAST_ACTIVE_TIME] = SystemClock.elapsedRealtime()
+        stateProperties[KEY_LAST_ACTIVE_TIME] = SystemClock.elapsedRealtime()
     }
 
     override suspend fun recordLocations(locations: List<Location>) {
@@ -94,14 +96,15 @@ internal class TrackingManagerImpl(private val context: Context) : TrackingManag
 
         storeLocationData(locations)
 
-        properties.put(KEY_SPEED, locations.last().speed)
+        stateProperties[KEY_SPEED] = locations.last().speed
 
         addRouteDistance(locations)
     }
 
     private fun addRouteDistance(locations: List<Location>) {
         val distanceToAdd = distanceCalculator.calculateDistanceTo(locations)
-        properties[KEY_ROUTE_DISTANCE] = getRouteDistance() + distanceToAdd
+        val routeDistance = stateProperties[KEY_ROUTE_DISTANCE] ?: 0L
+        stateProperties[KEY_ROUTE_DISTANCE] = routeDistance + distanceToAdd
     }
 
     private fun openLocationFile() {
@@ -113,8 +116,8 @@ internal class TrackingManagerImpl(private val context: Context) : TrackingManag
         locationOutputStream?.close()
     }
 
-    private suspend fun storeLocationData(locations: List<Location>) {
-        val dataVersion = properties.get<Byte>(KEY_DATA_VERSION) ?: DATA_VERSION
+    private fun storeLocationData(locations: List<Location>) {
+        val dataVersion = stateProperties[KEY_DATA_VERSION] ?: DATA_VERSION
         val byteArray = locationSerializers[dataVersion]?.serialize(locations) ?: ByteArray(0)
         locationOutputStream?.write(byteArray)
     }
@@ -152,22 +155,12 @@ internal class TrackingManagerImpl(private val context: Context) : TrackingManag
     }
 
     companion object {
-        private const val TAG = "TrackingManager"
+        private const val DATA_DIR = "manager"
 
         private const val DATA_V1: Byte = 1
         private const val DATA_VERSION: Byte = DATA_V1
 
-        private const val ROOT_DIR = "akhoi.libs.mlct.tracking_state"
-
         private const val TICKER_PERIOD = 1000L
 
-        private const val KEY_START_TIME_CA = "KEY_CREATED_TIME"
-        private const val KEY_START_TIME_EL = "KEY_START_TIME"
-        private const val KEY_DATA_VERSION = "KEY_DATA_VERSION"
-        private const val KEY_SPEED = "KEY_SPEED"
-        private const val KEY_ROUTE_DISTANCE = "KEY_ROUTE_DISTANCE"
-        private const val KEY_STATUS = "KEY_STATUS"
-        private const val KEY_PAUSED_DURATION = "KEY_PAUSE_DURATION"
-        private const val KEY_LAST_ACTIVE_TIME = "KEY_LAST_ACTIVE_TIME"
     }
 }

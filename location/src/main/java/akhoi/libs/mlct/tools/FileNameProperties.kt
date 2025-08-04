@@ -3,27 +3,23 @@ package akhoi.libs.mlct.tools
 import java.io.File
 import kotlin.reflect.KClass
 
-class FileNameProperties(locationDir: File, name: String) {
+class FileNameProperties(locationDir: File, name: String): KeyValuePreferences {
     private val propsDir: File = File("$locationDir/$name")
 
     init {
         propsDir.mkdirs()
     }
 
-    inline operator fun <reified T : Any> get(key: String): T? = get(key, T::class)
-    inline operator fun <reified T : Any> set(key: String, value: T?) = put(key, value, T::class)
-    inline fun <reified T : Any> put(key: String, value: T) = put(key, value, T::class)
+    @Synchronized
+    override fun contains(key: String): Boolean = propsDir.resolve(key).exists()
 
     @Synchronized
-    fun contains(key: String): Boolean = propsDir.resolve(key).exists()
-
-    @Synchronized
-    fun remove(key: String) {
+    override fun remove(key: String) {
         propsDir.resolve(key).delete()
     }
 
     @Synchronized
-    fun <T : Any> get(key: String, klazz: KClass<T>): T? {
+    override fun <T : Any> get(key: String, klazz: KClass<T>): T? {
         val keyDir = propsDir.resolve(key)
         if (!keyDir.exists()) {
             return null
@@ -48,7 +44,7 @@ class FileNameProperties(locationDir: File, name: String) {
     }
 
     @Synchronized
-    fun <T : Any> put(key: String, value: T?, klazz: KClass<T>? = null) {
+    override operator fun <T : Any> set(key: String, value: T?) {
         if (value == null) {
             remove(key)
             return
