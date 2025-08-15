@@ -1,7 +1,5 @@
-package akhoi.libs.tools
+package akhoi.libs.mlct.tools
 
-import akhoi.libs.mlct.tools.compactDouble
-import akhoi.libs.mlct.tools.restoreDouble
 import kotlin.math.roundToInt
 import kotlin.test.Test
 import kotlin.test.assertEquals

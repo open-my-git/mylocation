@@ -1,13 +1,33 @@
 package akhoi.libs.mlct.tools
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.io.File
+import kotlin.io.path.name
 import kotlin.reflect.KClass
 
-class FileNameProperties(locationDir: File, name: String): KeyValuePreferences {
-    private val propsDir: File = File("$locationDir/$name")
+class FileNameProperties(
+    private val propsDir: File,
+    private val keyWatcher: FileWatcher
+) : KeyValuePreferences {
+    private val valueConverters = mutableMapOf<KClass<*>, ValueConverter<*>>()
 
     init {
         propsDir.mkdirs()
+        registerValueConverters()
+    }
+
+    private fun registerValueConverters() {
+        valueConverters[Byte::class] = ValueConverter { it?.toByteOrNull() }
+        valueConverters[UByte::class] = ValueConverter { it?.toUByteOrNull() }
+        valueConverters[Short::class] = ValueConverter { it?.toShortOrNull() }
+        valueConverters[UShort::class] = ValueConverter { it?.toUShortOrNull() }
+        valueConverters[Int::class] = ValueConverter { it?.toIntOrNull() }
+        valueConverters[UInt::class] = ValueConverter { it?.toUIntOrNull() }
+        valueConverters[Long::class] = ValueConverter { it?.toLongOrNull() }
+        valueConverters[ULong::class] = ValueConverter { it?.toULongOrNull() }
+        valueConverters[Float::class] = ValueConverter { it?.toFloatOrNull() }
+        valueConverters[Double::class] = ValueConverter { it?.toDoubleOrNull() }
     }
 
     @Synchronized
@@ -15,7 +35,8 @@ class FileNameProperties(locationDir: File, name: String): KeyValuePreferences {
 
     @Synchronized
     override fun remove(key: String) {
-        propsDir.resolve(key).delete()
+        keyWatcher.unwatchFile(key)
+        propsDir.resolve(key).deleteRecursively()
     }
 
     @Synchronized
@@ -24,52 +45,67 @@ class FileNameProperties(locationDir: File, name: String): KeyValuePreferences {
         if (!keyDir.exists()) {
             return null
         }
-        val valueString = keyDir.listFiles()?.firstOrNull()?.name
+        val stringValue = keyDir.listFiles()?.firstOrNull()?.name
 
-        @Suppress("UNCHECKED_CAST")
-        return when (klazz) {
-            String -> valueString
-            Byte -> valueString?.toByteOrNull()
-            UByte -> valueString?.toUByteOrNull()
-            Short -> valueString?.toShortOrNull()
-            UShort -> valueString?.toUShortOrNull()
-            Int -> valueString?.toIntOrNull()
-            UInt -> valueString?.toUIntOrNull()
-            Long -> valueString?.toLongOrNull()
-            ULong -> valueString?.toULongOrNull()
-            Float -> valueString?.toFloatOrNull()
-            Double -> valueString?.toDoubleOrNull()
-            else -> null
-        } as T?
+        return convertValue(stringValue, klazz)
     }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> convertValue(stringValue: String?, klazz: KClass<T>): T? =
+        valueConverters[klazz]?.invoke(stringValue) as T?
+
+    override fun <T : Any> flowGet(
+        key: String,
+        klazz: KClass<T>
+    ): Flow<T?> = keyWatcher.watchFile(key)
+        .map { (_, path) -> valueConverters[klazz]?.invoke(path.name) as T? }
 
     @Synchronized
     override operator fun <T : Any> set(key: String, value: T?) {
+        val keyDir = propsDir.resolve(key)
+        val currentKey = keyDir.listFiles()?.firstOrNull()
         if (value == null) {
-            remove(key)
+            if (currentKey?.exists() == true) {
+                currentKey.delete()
+            }
             return
         }
 
-        val valueString = value.toString()
-        if (valueString.length > 255) {
+        val stringValue = value.toString()
+        if (stringValue.length > 255) {
             return
         }
 
-        writeFile(key, valueString)
+        writeFile(key, stringValue)
     }
 
-    private fun writeFile(key: String, valueString: String) {
+    private fun writeFile(key: String, stringValue: String) {
         val keyDir = propsDir.resolve(key)
-        if (keyDir.exists()) {
-            keyDir.listFiles()?.forEach { it.delete() }
-        } else {
+        if (!keyDir.exists()) {
             keyDir.mkdir()
         }
-        File("$keyDir/$valueString").createNewFile()
+        val currentKey = keyDir.listFiles()?.firstOrNull()
+        val newKey = File("$keyDir/$stringValue")
+        if (currentKey?.exists() == true && currentKey.name != stringValue) {
+            if (!currentKey.renameTo(newKey)) {
+                currentKey.delete()
+            }
+        }
+        if (!newKey.exists()) {
+            newKey.createNewFile()
+        }
     }
 
     @Synchronized
     fun clear() {
         propsDir.listFiles()?.forEach { it.deleteRecursively() }
+    }
+
+    private fun interface ValueConverter<T> {
+        fun invoke(stringValue: String?): T?
+    }
+
+    companion object {
+        private const val TAG = "FileNameProperties"
     }
 }

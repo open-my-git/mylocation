@@ -1,9 +1,11 @@
 package akhoi.libs.mlct.tools
 
+import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KClass
 
 interface KeyValuePrefsReader {
     fun <T : Any> get(key: String, klazz: KClass<T>): T?
+    fun <T : Any> flowGet(key: String, klazz: KClass<T>): Flow<T?>
     fun contains(key: String): Boolean
 }
 

@@ -1,6 +1,5 @@
-package akhoi.libs.tools
+package akhoi.libs.mlct.tools
 
-import akhoi.libs.mlct.tools.LRUCache
 import org.junit.Test
 import org.junit.Assert.*
 

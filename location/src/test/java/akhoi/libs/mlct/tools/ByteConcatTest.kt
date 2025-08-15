@@ -1,6 +1,5 @@
-package akhoi.libs.tools
+package akhoi.libs.mlct.tools
 
-import akhoi.libs.mlct.tools.ByteConcat
 import org.junit.Test
 import kotlin.random.Random
 import kotlin.test.assertContentEquals
@@ -13,7 +12,7 @@ class ByteConcatTest {
         byteConcat.appendInt(61097752, 32)
 
         val expected = byteArrayFromInts(0x03, 0xA4, 0x47, 0x18)
-        assertContentEquals(expected, byteConcat.content)
+        assertContentEquals(expected, byteConcat.getContent())
         assertEquals(expected.size * 8, byteConcat.position)
     }
 
@@ -23,7 +22,7 @@ class ByteConcatTest {
         byteConcat.appendInt(24, 4)
 
         val expected = byteArrayFromInts(0x80)
-        assertContentEquals(expected, byteConcat.content)
+        assertContentEquals(expected, byteConcat.getContent())
         assertEquals(4, byteConcat.position)
     }
 
@@ -33,7 +32,7 @@ class ByteConcatTest {
         byteConcat.appendInt(-1234, 12)
 
         val expected = byteArrayFromInts(0xB2, 0xE0)
-        assertContentEquals(expected, byteConcat.content)
+        assertContentEquals(expected, byteConcat.getContent())
         assertEquals(12, byteConcat.position)
     }
 
@@ -43,7 +42,7 @@ class ByteConcatTest {
         byteConcat.appendInt(-61097752, 32)
 
         val expected = byteArrayFromInts(0xFC, 0x5B, 0xB8, 0xE8)
-        assertContentEquals(expected, byteConcat.content)
+        assertContentEquals(expected, byteConcat.getContent())
         assertEquals(expected.size * 8, byteConcat.position)
     }
 
@@ -55,7 +54,7 @@ class ByteConcatTest {
         byteConcat.appendInt(27562344, 24)
 
         val expected = byteArrayFromInts(0x80, 0x81, 0x4C, 0xA4, 0x91, 0x68)
-        assertContentEquals(expected, byteConcat.content)
+        assertContentEquals(expected, byteConcat.getContent())
         assertEquals(expected.size * 8, byteConcat.position)
     }
 
@@ -74,7 +73,7 @@ class ByteConcatTest {
                 expected[i] = ((value shl (24 - byteIndex)) shr 24).toByte()
             }
 
-            assertContentEquals(expected, byteConcat.content)
+            assertContentEquals(expected, byteConcat.getContent())
             assertEquals(expected.size * 8, byteConcat.position)
         }
     }
@@ -91,7 +90,7 @@ class ByteConcatTest {
             0x92, 0x73, 0xC6, 0x00
         )
 
-        assertContentEquals(expected, byteConcat.content)
+        assertContentEquals(expected, byteConcat.getContent())
         assertEquals(60, byteConcat.position)
     }
 
@@ -99,8 +98,7 @@ class ByteConcatTest {
     fun testAppendInt_zeroValueSize() {
         val byteConcat = ByteConcat(3)
         byteConcat.appendInt(12730100, 0)
-        val expected = byteArrayOf(0, 0, 0)
-        assertContentEquals(expected, byteConcat.content)
+        assertContentEquals(ByteArray(0), byteConcat.getContent())
         assertEquals(0, byteConcat.position)
     }
 
@@ -109,17 +107,17 @@ class ByteConcatTest {
         val byteConcat = ByteConcat(4)
         byteConcat.appendInt(1412317098, 32)
         val expected = byteArrayFromInts(0x54, 0x2E, 0x3F, 0xAA)
-        assertContentEquals(expected, byteConcat.content)
+        assertContentEquals(expected, byteConcat.getContent())
         assertEquals(32, byteConcat.position)
     }
 
     @Test
     fun testAppendInt_sizeExceededCapacity() {
         val byteConcat = ByteConcat(3)
-        byteConcat.appendInt(572662306, 32)
-        val expected = byteArrayOf(0x22, 0x22, 0x22)
-        assertContentEquals(expected, byteConcat.content)
-        assertEquals(24, byteConcat.position)
+        byteConcat.appendInt(0x22222222, 32)
+        val expected = byteArrayOf(0x22, 0x22, 0x22, 0x22)
+        assertContentEquals(expected, byteConcat.getContent())
+        assertEquals(32, byteConcat.position)
     }
 
     @Test
@@ -128,7 +126,7 @@ class ByteConcatTest {
         byteConcat.appendInt(1, 1)
         byteConcat.appendInt(1, 1)
         byteConcat.appendInt(1, 1)
-        assertContentEquals(byteArrayOf(0xE0.toByte()), byteConcat.content)
+        assertContentEquals(byteArrayOf(0xE0.toByte()), byteConcat.getContent())
     }
 
     @Test
@@ -153,14 +151,14 @@ class ByteConcatTest {
     fun testAppendLong_positiveIntegerValue_integerSize() {
         val byteConcatLong = ByteConcat(3)
         byteConcatLong.appendLong(0x10460E10L, 17)
-        assertContentEquals(byteArrayFromInts(0x07, 0x08, 0x00), byteConcatLong.content)
+        assertContentEquals(byteArrayFromInts(0x07, 0x08, 0x00), byteConcatLong.getContent())
     }
 
     @Test
     fun testAppendLong_negativeIntegerValue_integerSize() {
         val byteConcatLong = ByteConcat(3)
         byteConcatLong.appendLong(-0x10460E10L, 17)
-        assertContentEquals(byteArrayFromInts(0xF8, 0xF8, 0x00), byteConcatLong.content)
+        assertContentEquals(byteArrayFromInts(0xF8, 0xF8, 0x00), byteConcatLong.getContent())
     }
 
     @Test
@@ -169,7 +167,7 @@ class ByteConcatTest {
         byteConcatLong.appendLong(0x1896014701634004, 25)
         assertContentEquals(
             byteArrayFromInts(0xB1, 0xA0, 0x02, 0x00),
-            byteConcatLong.content
+            byteConcatLong.getContent()
         )
     }
 
@@ -179,7 +177,7 @@ class ByteConcatTest {
         byteConcatLong.appendLong(-0x1896014701634004, 25)
         assertContentEquals(
             byteArrayFromInts(0x4E, 0x5F, 0xFE, 0x00),
-            byteConcatLong.content
+            byteConcatLong.getContent()
         )
     }
 
@@ -189,7 +187,7 @@ class ByteConcatTest {
         byteConcatLong.appendLong(0x1896014701634004, 43)
         assertContentEquals(
             byteArrayFromInts(0x28, 0xE0, 0x2C, 0x68, 0x00, 0x80),
-            byteConcatLong.content
+            byteConcatLong.getContent()
         )
     }
 
@@ -199,7 +197,7 @@ class ByteConcatTest {
         byteConcatLong.appendLong(-0x1896014701634004, 43)
         assertContentEquals(
             byteArrayFromInts(0xD7, 0x1F, 0xD3, 0x97, 0xFF, 0x80),
-            byteConcatLong.content
+            byteConcatLong.getContent()
         )
     }
 
