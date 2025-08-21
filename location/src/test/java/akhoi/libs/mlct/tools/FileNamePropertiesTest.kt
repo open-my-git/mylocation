@@ -26,7 +26,6 @@ class FileNamePropertiesTest {
     lateinit var tempDir: File
     lateinit var testScope: TestScope
     lateinit var ioScope: CoroutineScope
-    lateinit var mockKeyWatcher: FileWatcher
 
     @Before
     fun setup() {
@@ -34,11 +33,7 @@ class FileNamePropertiesTest {
         tempDir = File(tempDirPath.toString())
         testScope = TestScope()
         ioScope = CoroutineScope(Dispatchers.IO)
-        mockKeyWatcher = mock()
-        fileNameProperties = FileNameProperties(
-            tempDir,
-            mockKeyWatcher
-        )
+        fileNameProperties = FileNameProperties(tempDir)
     }
 
     @After

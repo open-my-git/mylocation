@@ -1,24 +1,26 @@
 package akhoi.libs.mlct.tools
 
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.cancel
 import kotlinx.coroutines.flow.filterNotNull
 import java.io.File
 import java.nio.file.FileSystems
+import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.StandardWatchEventKinds.ENTRY_CREATE
 import java.nio.file.StandardWatchEventKinds.ENTRY_DELETE
 import java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY
 import java.nio.file.StandardWatchEventKinds.OVERFLOW
+import java.nio.file.WatchEvent
 import java.nio.file.WatchKey
 import java.nio.file.WatchService
 import kotlin.io.path.relativeTo
 
-class FileWatcher(private val rootDir: File) {
+class FileWatcher(
+    private val rootDir: File,
     private val watchService: WatchService = FileSystems.getDefault().newWatchService()
+) {
     private val watchEventMap = mutableMapOf<String, MutableStateFlow<EventData?>>()
     private val watchDirList = mutableListOf<WatchKey>()
 
@@ -35,16 +37,22 @@ class FileWatcher(private val rootDir: File) {
         watchEventMap.remove(key)
     }
 
-    fun watchDirectory(key: String) {
+    fun registerDirectory(key: String): Boolean {
         val dir = rootDir.resolve(key)
-        val dirWatchKey =
+        val dirWatchKey = try {
             dir.toPath().register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
+        } catch (_: NoSuchFileException) {
+            return false
+        }
         watchDirList.add(dirWatchKey)
+        return true
     }
 
-    fun unwatchDirectory(key: String) {
+    fun unregisterDirectory(key: String) {
         val dir = rootDir.resolve(key)
-        watchDirList.removeIf { (it.watchable() as? Path)?.toFile() == dir }
+        val removeIdx = watchDirList.indexOfFirst { (it.watchable() as? Path)?.toFile() == dir }
+        val removed = watchDirList.removeAt(removeIdx)
+        removed.cancel()
     }
 
     suspend fun start() {
@@ -54,11 +62,11 @@ class FileWatcher(private val rootDir: File) {
                 rootDir.toPath().register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
             watchDirList.add(rootWatchKey)
             while (true) {
-                delay(1000L)
-                watchKey = watchService.take() ?: continue
+                delay(POLLING_PERIOD)
+                watchKey = watchService.poll() ?: continue
                 val watchDirPath = watchKey.watchable() as? Path
                 for (event in watchKey.pollEvents()) {
-                    val path = (event as? java.nio.file.WatchEvent<Path>)?.context()
+                    val path = (event as? WatchEvent<Path>)?.context()
                     val kind = event.kind()
                     if (watchDirPath == null || kind == null || path == null || kind == OVERFLOW) {
                         continue
@@ -71,7 +79,7 @@ class FileWatcher(private val rootDir: File) {
                     }
                     val fullPath = watchDirPath.resolve(path)
                     val keyPath = fullPath.relativeTo(rootDir.toPath())
-                    watchEventMap[keyPath.toString()]?.emit(EventData(event, keyPath))
+                    watchEventMap[keyPath.toString()]?.tryEmit(EventData(event, keyPath))
                 }
 
                 if (!watchKey.reset()) {
@@ -101,4 +109,8 @@ class FileWatcher(private val rootDir: File) {
         val type: EventType,
         val path: Path
     )
+
+    companion object {
+        private const val POLLING_PERIOD = 1000L
+    }
 }

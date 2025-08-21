@@ -8,9 +8,9 @@ import kotlin.reflect.KClass
 
 class FileNameProperties(
     private val propsDir: File,
-    private val keyWatcher: FileWatcher
 ) : KeyValuePreferences {
     private val valueConverters = mutableMapOf<KClass<*>, ValueConverter<*>>()
+    private val keyWatcher: FileWatcher = FileWatcher(propsDir)
 
     init {
         propsDir.mkdirs()
@@ -103,9 +103,5 @@ class FileNameProperties(
 
     private fun interface ValueConverter<T> {
         fun invoke(stringValue: String?): T?
-    }
-
-    companion object {
-        private const val TAG = "FileNameProperties"
     }
 }
