@@ -9,85 +9,85 @@ class CompactNumberTest {
     @Test
     fun testCompactDouble_positive_normalSizes() {
         val actual = compactDouble(3.14, 4, 31)
-        assertEquals(18403934863, actual)
+        assertEquals(0x448F5C28F, actual)
     }
 
     @Test
     fun testCompactDouble_positive_sameSSize_eSizeOne() {
         val actual = compactDouble(56.18, 1, 20)
-        assertEquals(1840906, actual)
+        assertEquals(0x1C170A, actual)
     }
 
     @Test
     fun testCompactDouble_positive_sameSSize_eSizeZero() {
         val actual = compactDouble(56.18, 0, 20)
-        assertEquals(792330, actual)
+        assertEquals(0xC170A, actual)
     }
 
     @Test
     fun testCompactDouble_positive_sameSSize_eSizeNegative() {
         val actual = compactDouble(56.18, -8, 20)
-        assertEquals(792330, actual)
+        assertEquals(0xC170A, actual)
     }
 
     @Test
     fun testCompactDouble_positive_sameESize_sSizeOne() {
         val actual = compactDouble(56.18, 5, 1)
-        assertEquals(41, actual)
+        assertEquals(0x29, actual)
     }
 
     @Test
     fun testCompactDouble_positive_sameESize_sSizeZero() {
         val actual = compactDouble(56.18, 5, 0)
-        assertEquals(41, actual)
+        assertEquals(0x29, actual)
     }
 
     @Test
     fun testCompactDouble_positive_sameESize_sSizeNegative() {
         val actual = compactDouble(56.18, 5, -3)
-        assertEquals(41, actual)
+        assertEquals(0x29, actual)
     }
 
     @Test
     fun testCompactDouble_negative_normalSizes() {
         val actual = compactDouble(-3.14, 4, 31)
-        assertEquals(52763673231, actual)
+        assertEquals(0xC48F5C28F, actual)
     }
 
     @Test
     fun testCompactDouble_negative_sameSSize_eSizeOne() {
         val actual = compactDouble(-56.18, 1, 20)
-        assertEquals(3938058, actual)
+        assertEquals(0x3C170A, actual)
     }
 
     @Test
     fun testCompactDouble_negative_sameSSize_eSizeZero() {
         val actual = compactDouble(-56.18, 0, 20)
-        assertEquals(1840906, actual)
+        assertEquals(0x1C170A, actual)
     }
 
     @Test
     fun testCompactDouble_negative_sameSSize_eSizeNegative() {
         val actual = compactDouble(-56.18, -8, 20)
-        assertEquals(1840906, actual)
+        assertEquals(0x1C170A, actual)
     }
 
     @Test
     fun testCompactDouble_negative_sameESize_sSizeOne() {
         val actual = compactDouble(-56.18, 5, 1)
-        assertEquals(105, actual)
+        assertEquals(0x69, actual)
     }
 
     @Test
     fun testCompactDouble_negative_sameESize_sSizeZero() {
         val actual = compactDouble(-56.18, 5, 0)
-        assertEquals(105, actual)
+        assertEquals(0x69, actual)
     }
 
     @Test
     fun testCompactDouble_negative_sameESize_sSizeNegative() {
         val actual = compactDouble(-56.18, 5, -3)
-        assertEquals(105, actual)
+        assertEquals(0x69, actual)
     }
 
     @Test
@@ -100,25 +100,25 @@ class CompactNumberTest {
     @Test
     fun testCompactDouble_positive_subnormal() {
         val actual = compactDouble(1.1508711201542864e-308, 5, 3)
-        assertEquals(4, actual)
+        assertEquals(0x4, actual)
     }
 
     @Test
     fun testCompactDouble_negative_subnormal() {
         val actual = compactDouble(-1.1508711201542864e-308, 5, 3)
-        assertEquals(260, actual)
+        assertEquals(0x104, actual)
     }
 
     @Test
     fun testCompactDouble_positive_infinity() {
         val actual = compactDouble(Double.POSITIVE_INFINITY, 3, 7)
-        assertEquals(896, actual)
+        assertEquals(0x380, actual)
     }
 
     @Test
     fun testCompactDouble_negative_infinity() {
         val actual = compactDouble(Double.NEGATIVE_INFINITY, 3, 7)
-        assertEquals(1920, actual)
+        assertEquals(0x780, actual)
     }
 
     @Test
@@ -130,7 +130,7 @@ class CompactNumberTest {
     @Test
     fun testCompactDouble_negative_zero() {
         val actual = compactDouble(-0.0, 5, 2)
-        assertEquals(128, actual)
+        assertEquals(0x80, actual)
     }
 
     @Test

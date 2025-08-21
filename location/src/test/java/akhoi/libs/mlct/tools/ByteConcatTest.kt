@@ -9,7 +9,7 @@ class ByteConcatTest {
     @Test
     fun testAppendInt_positive_notTruncated() {
         val byteConcat = ByteConcat(4)
-        byteConcat.appendInt(61097752, 32)
+        byteConcat.appendInt(0x3A44718, 32)
 
         val expected = byteArrayFromInts(0x03, 0xA4, 0x47, 0x18)
         assertContentEquals(expected, byteConcat.getContent())
@@ -19,7 +19,7 @@ class ByteConcatTest {
     @Test
     fun testAppendInt_positive_truncated() {
         val byteConcat = ByteConcat(1)
-        byteConcat.appendInt(24, 4)
+        byteConcat.appendInt(0x18, 4)
 
         val expected = byteArrayFromInts(0x80)
         assertContentEquals(expected, byteConcat.getContent())
@@ -29,7 +29,7 @@ class ByteConcatTest {
     @Test
     fun testAppendInt_negative_truncated() {
         val byteConcat = ByteConcat(2)
-        byteConcat.appendInt(-1234, 12)
+        byteConcat.appendInt(-0x4D2, 12)
 
         val expected = byteArrayFromInts(0xB2, 0xE0)
         assertContentEquals(expected, byteConcat.getContent())
@@ -39,7 +39,7 @@ class ByteConcatTest {
     @Test
     fun testAppendInt_negative_notTruncated() {
         val byteConcat = ByteConcat(4)
-        byteConcat.appendInt(-61097752, 32)
+        byteConcat.appendInt(-0x3A44718, 32)
 
         val expected = byteArrayFromInts(0xFC, 0x5B, 0xB8, 0xE8)
         assertContentEquals(expected, byteConcat.getContent())
@@ -49,9 +49,9 @@ class ByteConcatTest {
     @Test
     fun testAppendInt_multiple_truncated_aligned() {
         val byteConcat = ByteConcat(6)
-        byteConcat.appendInt(384, 8)
-        byteConcat.appendInt(98636, 16)
-        byteConcat.appendInt(27562344, 24)
+        byteConcat.appendInt(0x180, 8)
+        byteConcat.appendInt(0x1814C, 16)
+        byteConcat.appendInt(0x1A49168, 24)
 
         val expected = byteArrayFromInts(0x80, 0x81, 0x4C, 0xA4, 0x91, 0x68)
         assertContentEquals(expected, byteConcat.getContent())
@@ -81,9 +81,9 @@ class ByteConcatTest {
     @Test
     fun testAppendInt_multiple_truncated_unaligned() {
         val byteConcat = ByteConcat(8)
-        byteConcat.appendInt(234566, 12)
-        byteConcat.appendInt(889682945, 20)
-        byteConcat.appendInt(690437216, 28)
+        byteConcat.appendInt(0x39446, 12)
+        byteConcat.appendInt(0x35077C01, 20)
+        byteConcat.appendInt(0x29273C60, 28)
 
         val expected = byteArrayFromInts(
             0x44, 0x67, 0x7C, 0x01,
@@ -97,7 +97,7 @@ class ByteConcatTest {
     @Test
     fun testAppendInt_zeroValueSize() {
         val byteConcat = ByteConcat(3)
-        byteConcat.appendInt(12730100, 0)
+        byteConcat.appendInt(0xC22A84, 0)
         assertContentEquals(ByteArray(0), byteConcat.getContent())
         assertEquals(0, byteConcat.position)
     }
@@ -105,7 +105,7 @@ class ByteConcatTest {
     @Test
     fun testAppendInt_maxValueSize() {
         val byteConcat = ByteConcat(4)
-        byteConcat.appendInt(1412317098, 32)
+        byteConcat.appendInt(0x542E3FAA, 32)
         val expected = byteArrayFromInts(0x54, 0x2E, 0x3F, 0xAA)
         assertContentEquals(expected, byteConcat.getContent())
         assertEquals(32, byteConcat.position)

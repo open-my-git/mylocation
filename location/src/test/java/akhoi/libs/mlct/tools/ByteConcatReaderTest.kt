@@ -17,7 +17,7 @@ class ByteConcatReaderTest {
         val content = byteArrayFromInts(0x77)
         val reader = ByteConcatReader(content)
         val actual = reader.readInt(5)
-        assertEquals(14, actual)
+        assertEquals(0xE, actual)
     }
 
     @Test
@@ -33,7 +33,7 @@ class ByteConcatReaderTest {
         val content = byteArrayFromInts(0x77, 0x33)
         val reader = ByteConcatReader(content)
         val actual = reader.readInt(15)
-        assertEquals(15257, actual)
+        assertEquals(0x3B99, actual)
     }
 
     @Test
@@ -41,9 +41,9 @@ class ByteConcatReaderTest {
         val content = byteArrayFromInts(0x77, 0x33)
         val reader = ByteConcatReader(content)
         val firstRead = reader.readInt(5)
-        assertEquals(14, firstRead)
+        assertEquals(0xE, firstRead)
         val secondRead = reader.readInt(10)
-        assertEquals(921, secondRead)
+        assertEquals(0x399, secondRead)
     }
 
     @Test
@@ -51,10 +51,10 @@ class ByteConcatReaderTest {
         val content = byteArrayFromInts(0x77, 0x33)
         val reader = ByteConcatReader(content)
         val firstRead = reader.readInt(5)
-        assertEquals(14, firstRead)
+        assertEquals(0xE, firstRead)
         reader.reset()
         val secondRead = reader.readInt(15)
-        assertEquals(15257, secondRead)
+        assertEquals(0x3B99, secondRead)
     }
 
     @Test
@@ -180,7 +180,7 @@ class ByteConcatReaderTest {
             )
         )
         val actual = reader.readDouble(64)
-        assertEquals(2.6411448957746666E-135, actual)
+        assertEquals(0x23FEB7091298F1DC, java.lang.Double.doubleToRawLongBits(actual))
     }
 
     private fun byteArrayFromInts(vararg ints: Int) = ints.map { it.toByte() }.toByteArray()
