@@ -6,39 +6,55 @@ import kotlin.test.assertEquals
 class ByteConcatReaderTest {
     @Test
     fun testReadInt_zeroSize() {
-        val content = byteArrayFromInts(0x77)
+        val content = byteArrayOf(0x77)
         val reader = ByteConcatReader(content)
         val actual = reader.readInt(0)
         assertEquals(0, actual)
     }
 
     @Test
-    fun testReadInt_subByte() {
-        val content = byteArrayFromInts(0x77)
+    fun testReadInt_partialByte() {
+        val content = byteArrayOf(0x77)
         val reader = ByteConcatReader(content)
         val actual = reader.readInt(5)
         assertEquals(0xE, actual)
     }
 
     @Test
-    fun testReadInt_completeByte() {
-        val content = byteArrayFromInts(0x77, 0x33)
+    fun testReadInt_fullByte() {
+        val content = byteArrayOf(0x77, 0x33)
         val reader = ByteConcatReader(content)
         val actual = reader.readInt(8)
         assertEquals(0x77, actual)
     }
 
     @Test
-    fun testReadInt_multipleBytes() {
-        val content = byteArrayFromInts(0x77, 0x33)
+    fun testReadInt_oneAndAPartialBytes() {
+        val content = byteArrayOf(0x77, 0x33)
         val reader = ByteConcatReader(content)
         val actual = reader.readInt(15)
         assertEquals(0x3B99, actual)
     }
 
     @Test
+    fun testReadInt_multipleBytes() {
+        val content = byteArrayOf(0x77, 0x33, 0x11)
+        val reader = ByteConcatReader(content)
+        val actual = reader.readInt(16)
+        assertEquals(0x7733, actual)
+    }
+
+    @Test
+    fun testReadInt_fullInteger() {
+        val content = byteArrayOf(0x77, 0x33, 0x11, 0x55, 0x00)
+        val reader = ByteConcatReader(content)
+        val actual = reader.readInt(32)
+        assertEquals(0x77331155, actual)
+    }
+
+    @Test
     fun testReadInt_multipleReads() {
-        val content = byteArrayFromInts(0x77, 0x33)
+        val content = byteArrayOf(0x77, 0x33)
         val reader = ByteConcatReader(content)
         val firstRead = reader.readInt(5)
         assertEquals(0xE, firstRead)
@@ -48,7 +64,7 @@ class ByteConcatReaderTest {
 
     @Test
     fun testReset() {
-        val content = byteArrayFromInts(0x77, 0x33)
+        val content = byteArrayOf(0x77, 0x33)
         val reader = ByteConcatReader(content)
         val firstRead = reader.readInt(5)
         assertEquals(0xE, firstRead)
@@ -58,11 +74,11 @@ class ByteConcatReaderTest {
     }
 
     @Test
-    fun testReadLong_longSize() {
+    fun testReadLong_full() {
         val reader = ByteConcatReader(
-            byteArrayFromInts(
-                0x2E, 0xF1, 0x02, 0x36,
-                0xBD, 0x21, 0xFC, 0x77
+            byteArrayOf(
+                0x2E, 0xF1.toByte(), 0x02, 0x36,
+                0xBD.toByte(), 0x21, 0xFC.toByte(), 0x77
             )
         )
         val actual = reader.readLong(64)
@@ -70,11 +86,11 @@ class ByteConcatReaderTest {
     }
 
     @Test
-    fun testReadLong_subLongSize() {
+    fun testReadLong_partial() {
         val reader = ByteConcatReader(
-            byteArrayFromInts(
-                0x2E, 0xF1, 0x02, 0x36,
-                0xBD, 0x21, 0xFC, 0x77
+            byteArrayOf(
+                0x2E, 0xF1.toByte(), 0x02, 0x36,
+                0xBD.toByte(), 0x21, 0xFC.toByte(), 0x77
             )
         )
         val actual = reader.readLong(46)
@@ -84,9 +100,9 @@ class ByteConcatReaderTest {
     @Test
     fun testReadLong_integerSize() {
         val reader = ByteConcatReader(
-            byteArrayFromInts(
-                0x2E, 0xF1, 0x02, 0x36,
-                0xBD, 0x21, 0xFC, 0x77
+            byteArrayOf(
+                0x2E, 0xF1.toByte(), 0x02, 0x36,
+                0xBD.toByte(), 0x21, 0xFC.toByte(), 0x77
             )
         )
         val actual = reader.readLong(32)
@@ -94,11 +110,11 @@ class ByteConcatReaderTest {
     }
 
     @Test
-    fun testReadLong_subIntegerSize() {
+    fun testReadLong_partialIntegerSize() {
         val reader = ByteConcatReader(
-            byteArrayFromInts(
-                0x2E, 0xF1, 0x02, 0x36,
-                0xBD, 0x21, 0xFC, 0x77
+            byteArrayOf(
+                0x2E, 0xF1.toByte(), 0x02, 0x36,
+                0xBD.toByte(), 0x21, 0xFC.toByte(), 0x77
             )
         )
         val actual = reader.readLong(23)
@@ -108,9 +124,9 @@ class ByteConcatReaderTest {
     @Test
     fun testReadLong_zeroSize() {
         val reader = ByteConcatReader(
-            byteArrayFromInts(
-                0x2E, 0xF1, 0x02, 0x36,
-                0xBD, 0x21, 0xFC, 0x77
+            byteArrayOf(
+                0x2E, 0xF1.toByte(), 0x02, 0x36,
+                0xBD.toByte(), 0x21, 0xFC.toByte(), 0x77
             )
         )
         val actual = reader.readLong(0)
@@ -120,9 +136,9 @@ class ByteConcatReaderTest {
     @Test
     fun testReadLong_afterReadInt() {
         val reader = ByteConcatReader(
-            byteArrayFromInts(
-                0x02, 0x36, 0xBD, 0x21,
-                0xFC, 0x77, 0xFA, 0x16
+            byteArrayOf(
+                0x02, 0x36, 0xBD.toByte(), 0x21,
+                0xFC.toByte(), 0x77, 0xFA.toByte(), 0x16
             )
         )
         val intNum = reader.readInt(25)
@@ -134,9 +150,9 @@ class ByteConcatReaderTest {
     @Test
     fun testReadInt_afterReadLong() {
         val reader = ByteConcatReader(
-            byteArrayFromInts(
-                0x02, 0x36, 0xBD, 0x21,
-                0xFC, 0x77, 0xFA, 0x16
+            byteArrayOf(
+                0x02, 0x36, 0xBD.toByte(), 0x21,
+                0xFC.toByte(), 0x77, 0xFA.toByte(), 0x16
             )
         )
         val longNum = reader.readLong(32)
@@ -148,40 +164,46 @@ class ByteConcatReaderTest {
     @Test
     fun testReadInt_exceededContentLength() {
         val reader = ByteConcatReader(
-            byteArrayFromInts(
-                0x62, 0x1F, 0xBC
+            byteArrayOf(
+                0x62, 0x1F, 0xBC.toByte()
             )
         )
         val actual = reader.readInt(32)
         assertEquals(0x621FBC, actual)
-        assertEquals(24, reader.position)
     }
 
     @Test
-    fun testReadLong_exceededLongSize() {
+    fun testReadLong_exceededNumberSize() {
         val reader = ByteConcatReader(
-            byteArrayFromInts(
-                0x62, 0x1F, 0xBC, 0xFF,
-                0x30, 0xAD, 0xFC, 0x14,
-                0x44, 0x95
+            byteArrayOf(
+                0x62, 0x1F, 0xBC.toByte(), 0xFF.toByte(),
+                0x30, 0xAD.toByte(), 0xFC.toByte(), 0x14,
+                0x44, 0x95.toByte()
             )
         )
         val actual = reader.readLong(65)
         assertEquals(0x621FBCFF30ADFC14, actual)
-        assertEquals(64, reader.position)
     }
 
     @Test
     fun testReadDouble() {
         val reader = ByteConcatReader(
-            byteArrayFromInts(
-                0x23, 0xFE, 0xB7, 0x09,
-                0x12, 0x98, 0xF1, 0xDC,
+            byteArrayOf(
+                0x23, 0xFE.toByte(), 0xB7.toByte(), 0x09,
+                0x12, 0x98.toByte(), 0xF1.toByte(), 0xDC.toByte(),
             )
         )
         val actual = reader.readDouble(64)
         assertEquals(0x23FEB7091298F1DC, java.lang.Double.doubleToRawLongBits(actual))
     }
 
-    private fun byteArrayFromInts(vararg ints: Int) = ints.map { it.toByte() }.toByteArray()
+    @Test
+    fun testSkip() {
+        val reader = ByteConcatReader(byteArrayOf(0x23, 0xFE.toByte()))
+        val firstRead = reader.readInt(4)
+        reader.skip(3)
+        val secondRead = reader.readLong(2)
+        assertEquals(0x2, firstRead)
+        assertEquals(0x3, secondRead)
+    }
 }

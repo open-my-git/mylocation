@@ -1,16 +1,18 @@
 package akhoi.libs.mlct.tools
 
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.io.File
+import java.io.IOException
 import kotlin.io.path.name
 import kotlin.reflect.KClass
 
 class FileNameProperties(
     private val propsDir: File,
+    private val keyWatcher: FileWatcher = FileWatcher(propsDir)
 ) : KeyValuePreferences {
     private val valueConverters = mutableMapOf<KClass<*>, ValueConverter<*>>()
-    private val keyWatcher: FileWatcher = FileWatcher(propsDir)
 
     init {
         propsDir.mkdirs()
@@ -18,16 +20,17 @@ class FileNameProperties(
     }
 
     private fun registerValueConverters() {
-        valueConverters[Byte::class] = ValueConverter { it?.toByteOrNull() }
-        valueConverters[UByte::class] = ValueConverter { it?.toUByteOrNull() }
-        valueConverters[Short::class] = ValueConverter { it?.toShortOrNull() }
-        valueConverters[UShort::class] = ValueConverter { it?.toUShortOrNull() }
-        valueConverters[Int::class] = ValueConverter { it?.toIntOrNull() }
-        valueConverters[UInt::class] = ValueConverter { it?.toUIntOrNull() }
-        valueConverters[Long::class] = ValueConverter { it?.toLongOrNull() }
-        valueConverters[ULong::class] = ValueConverter { it?.toULongOrNull() }
-        valueConverters[Float::class] = ValueConverter { it?.toFloatOrNull() }
-        valueConverters[Double::class] = ValueConverter { it?.toDoubleOrNull() }
+        valueConverters[Byte::class] = ValueConverter { it.toByteOrNull() }
+        valueConverters[UByte::class] = ValueConverter { it.toUByteOrNull() }
+        valueConverters[Short::class] = ValueConverter { it.toShortOrNull() }
+        valueConverters[UShort::class] = ValueConverter { it.toUShortOrNull() }
+        valueConverters[Int::class] = ValueConverter { it.toIntOrNull() }
+        valueConverters[UInt::class] = ValueConverter { it.toUIntOrNull() }
+        valueConverters[Long::class] = ValueConverter { it.toLongOrNull() }
+        valueConverters[ULong::class] = ValueConverter { it.toULongOrNull() }
+        valueConverters[Float::class] = ValueConverter { it.toFloatOrNull() }
+        valueConverters[Double::class] = ValueConverter { it.toDoubleOrNull() }
+        valueConverters[String::class] = ValueConverter { it }
     }
 
     @Synchronized
@@ -45,54 +48,84 @@ class FileNameProperties(
         if (!keyDir.exists()) {
             return null
         }
-        val stringValue = keyDir.listFiles()?.firstOrNull()?.name
 
-        return convertValue(stringValue, klazz)
+        val keyFile = keyDir.listFiles()?.firstOrNull()
+        val keyFileName = keyFile?.name ?: ""
+        val stringValue = if (keyFile != null && keyFile.length() > 0L) {
+            keyFile.bufferedReader().use {
+                it.readText()
+            }
+        } else {
+            keyFileName
+        }
+        @Suppress("UNCHECKED_CAST")
+        return valueConverters[klazz]?.invoke(stringValue) as T?
     }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <T : Any> convertValue(stringValue: String?, klazz: KClass<T>): T? =
-        valueConverters[klazz]?.invoke(stringValue) as T?
 
     override fun <T : Any> flowGet(
         key: String,
         klazz: KClass<T>
     ): Flow<T?> = keyWatcher.watchFile(key)
-        .map { (_, path) -> valueConverters[klazz]?.invoke(path.name) as T? }
+        .map { (type, path) ->
+            @Suppress("UNCHECKED_CAST")
+            when (type) {
+                FileWatcher.EventType.CREATED, FileWatcher.EventType.UPDATED ->
+                    valueConverters[klazz]?.invoke(path.name) as T?
+                FileWatcher.EventType.DELETED -> null
+            }
+        }
 
     @Synchronized
     override operator fun <T : Any> set(key: String, value: T?) {
         val keyDir = propsDir.resolve(key)
-        val currentKey = keyDir.listFiles()?.firstOrNull()
         if (value == null) {
-            if (currentKey?.exists() == true) {
-                currentKey.delete()
-            }
+            keyDir.deleteRecursively()
             return
         }
 
+        keyDir.mkdir()
         val stringValue = value.toString()
-        if (stringValue.length > 255) {
+        if (stringValue.isEmpty()) {
+            val keyFile = keyDir.listFiles()?.firstOrNull()
+            keyFile?.delete()
             return
         }
 
         writeFile(key, stringValue)
     }
 
-    private fun writeFile(key: String, stringValue: String) {
+    private fun writeFile(key: String, value: String) {
         val keyDir = propsDir.resolve(key)
-        if (!keyDir.exists()) {
-            keyDir.mkdir()
+        val keyFile = keyDir.listFiles()?.firstOrNull()
+        val isKeyFileExisted = keyFile?.exists() == true
+        if (isKeyFileExisted && keyFile.length() == 0L && keyFile.name == value) {
+            return
         }
-        val currentKey = keyDir.listFiles()?.firstOrNull()
-        val newKey = File("$keyDir/$stringValue")
-        if (currentKey?.exists() == true && currentKey.name != stringValue) {
-            if (!currentKey.renameTo(newKey)) {
-                currentKey.delete()
+
+        val writeStringToFile: (f: File, s: String) -> Unit = { f, s ->
+            f.bufferedWriter().use { it.write(s) }
+        }
+
+        val keyContentFile = File("$keyDir/$key")
+        if (value.length > MAX_VALUE_LEN) {
+            keyFile?.delete()
+            writeStringToFile(keyContentFile, value)
+            return
+        }
+
+        keyContentFile.delete()
+        val newKeyFile = File("$keyDir/$value")
+        if (isKeyFileExisted) {
+            if (!keyFile.renameTo(newKeyFile)) {
+                keyFile.delete()
+                writeStringToFile(keyContentFile, value)
             }
-        }
-        if (!newKey.exists()) {
-            newKey.createNewFile()
+        } else {
+            try {
+                newKeyFile.createNewFile()
+            } catch (_: IOException) {
+                writeStringToFile(keyContentFile, value)
+            }
         }
     }
 
@@ -102,6 +135,11 @@ class FileNameProperties(
     }
 
     private fun interface ValueConverter<T> {
-        fun invoke(stringValue: String?): T?
+        fun invoke(stringValue: String): T?
+    }
+
+    companion object {
+        @VisibleForTesting
+        const val MAX_VALUE_LEN = 255
     }
 }

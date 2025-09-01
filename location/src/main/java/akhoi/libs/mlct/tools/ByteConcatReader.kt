@@ -3,7 +3,7 @@ package akhoi.libs.mlct.tools
 import kotlin.math.min
 
 class ByteConcatReader(private val content: ByteArray) {
-    var position: Int = 0
+    private var position: Int = 0
 
     fun readInt(size: Int): Int {
         if (size <= 0) {
@@ -30,10 +30,10 @@ class ByteConcatReader(private val content: ByteArray) {
     fun readLong(size: Int): Long {
         val value: Long
         if (size <= 32) {
-            value = readInt(size).toLong() and (-1L shl size).inv()
+            value = readInt(size).toLong() and (1L shl size) - 1
         } else {
-            val msBitsSize = size - 32
-            val msBits = readInt(msBitsSize).toLong() and (-1L shl msBitsSize).inv()
+            val msBitsCount = size - 32
+            val msBits = readInt(msBitsCount).toLong() and (1L shl msBitsCount) - 1
             val lsBits = readInt(32).toLong() and 0xFFFFFFFF
             value = msBits shl 32 or lsBits
         }
@@ -49,7 +49,7 @@ class ByteConcatReader(private val content: ByteArray) {
         position = 0
     }
 
-    fun align() {
-        position = (position + 7) and -8
+    fun skip(count: Int) {
+        position += count
     }
 }
