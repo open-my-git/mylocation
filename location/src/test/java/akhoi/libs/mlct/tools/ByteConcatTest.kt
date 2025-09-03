@@ -131,11 +131,11 @@ class ByteConcatTest {
     @Test
     fun testAppendLong_multiple_withinOneByte() {
         val byteConcat = ByteConcat(1)
-        byteConcat.appendLong(0x01, 2)
+        byteConcat.appendLong(-0x01, 2)
         byteConcat.appendLong(0x23, 2)
         byteConcat.appendLong(0x45, 2)
         assertContentEquals(
-            byteArrayOf(0x74),
+            byteArrayOf(0xF4.toByte()),
             byteConcat.getContent()
         )
     }
@@ -146,6 +146,17 @@ class ByteConcatTest {
         byteConcatLong.appendLong(0x1896014701634004, 64)
         assertContentEquals(
             byteArrayOf(0x18, 0x96.toByte(), 0x01, 0x47, 0x01, 0x63, 0x40, 0x04),
+            byteConcatLong.getContent()
+        )
+    }
+
+    @Test
+    fun testAppendLong_multiple_partial() {
+        val byteConcatLong = ByteConcat(11)
+        byteConcatLong.appendLong(0x1896014701634004, 64)
+        byteConcatLong.appendLong(0x1896014701634004, 24)
+        assertContentEquals(
+            byteArrayOf(0x18, 0x96.toByte(), 0x01, 0x47, 0x01, 0x63, 0x40, 0x04, 0x63, 0x40, 0x04),
             byteConcatLong.getContent()
         )
     }

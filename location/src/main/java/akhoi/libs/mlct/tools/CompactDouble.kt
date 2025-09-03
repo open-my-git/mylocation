@@ -30,7 +30,7 @@ fun resizeDouble(
     val desBias = desExpMask shr 1
     val desExponent = when {
         desActualExpSize == 0 -> 0
-        srcActualExpSize == 0 -> 1 + desBias and desExpMask
+        srcActualExpSize == 0 -> (1 + desBias) and desExpMask
         else -> {
             val srcExpMask = (1L shl srcActualExpSize) - 1
             val srcBias = srcExpMask shr 1
@@ -38,7 +38,7 @@ fun resizeDouble(
             when (srcExponent) {
                 0L -> 0L
                 srcExpMask -> desExpMask
-                else -> srcExponent - srcBias + desBias and desExpMask
+                else -> (srcExponent - srcBias + desBias) and desExpMask
             }
         }
     }

@@ -12,22 +12,19 @@ class ByteConcat(initCap: Int = 2) {
     fun getContent(): ByteArray = bucket.copyOf(((position + 7) shr 3).toInt())
 
     fun appendInt(value: Int, size: Int) {
-        if (size ushr 31 == 1) {
-            return
-        }
-        var remaining = min(size, 32)
+        var remaining = max(min(size, 32), 0)
         var byte: Int
-        var available: Int
-        while (remaining > 0) {
+        var available = 8 - (position and 7).toInt()
+        while (remaining > 0) synchronized(bucket) {
             byte = (position shr 3).toInt()
-            if (byte xor bucket.size == 0) {
+            if (byte == bucket.size) {
                 expandBucket()
             }
-            available = (8 - (position and 7)).toInt()
-            bucket[byte] = bucket[byte] or
-                    (value shl (32 - remaining) ushr (32 - available)).toByte()
+            val truncated = (value shl (32 - remaining) ushr (32 - available)).toByte()
+            bucket[byte] = bucket[byte] or truncated
             position += min(remaining, available)
             remaining -= available
+            available = 8
         }
     }
 
@@ -40,9 +37,9 @@ class ByteConcat(initCap: Int = 2) {
         }
     }
 
-    private fun expandBucket(expected: Int = bucket.size + 1) {
+    private fun expandBucket(expected: Int = bucket.size + 1) = synchronized(bucket) {
         val capableSize = bucket.size + max(expected - bucket.size, bucket.size shr 1)
-        if (capableSize < 0) {
+        if (capableSize < bucket.size) {
             throw OutOfMemoryError("Expectation $expected above the valid range.")
         }
         bucket = bucket.copyOf(capableSize)

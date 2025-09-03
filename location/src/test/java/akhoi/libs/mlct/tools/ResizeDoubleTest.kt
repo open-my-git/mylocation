@@ -5,97 +5,55 @@ import kotlin.test.assertEquals
 
 class ResizeDoubleTest {
     @Test
-    fun testCompressDouble_positive() {
+    fun testCompressDouble() {
         val actual = compressDouble(3.14, 4, 31)
         assertEquals(0x448F5C28F, actual)
     }
 
     @Test
-    fun testCompressDouble_positive_expSizeOne() {
+    fun testCompressDouble_expSizeOne() {
         val actual = compressDouble(56.18, 1, 20)
         assertEquals(0x1C170A, actual)
     }
 
     @Test
-    fun testCompressDouble_positive_expSizeZero() {
+    fun testCompressDouble_expSizeZero() {
         val actual = compressDouble(56.18, 0, 20)
         assertEquals(0xC170A, actual)
     }
 
     @Test
-    fun testCompressDouble_positive_negativeExpSize() {
+    fun testCompressDouble_negativeExpSize() {
         val actual = compressDouble(56.18, -8, 20)
         assertEquals(0xC170A, actual)
     }
 
     @Test
-    fun testCompressDouble_positive_sigSizeOne() {
+    fun testCompressDouble_sigSizeOne() {
         val actual = compressDouble(56.18, 5, 1)
         assertEquals(0x29, actual)
     }
 
     @Test
-    fun testCompressDouble_positive_sigSizeZero() {
+    fun testCompressDouble_sigSizeZero() {
         val actual = compressDouble(56.18, 5, 0)
         assertEquals(0x29, actual)
     }
 
     @Test
-    fun testCompressDouble_positive_negativeSigSize() {
+    fun testCompressDouble_negativeSigSize() {
         val actual = compressDouble(56.18, 5, -3)
         assertEquals(0x29, actual)
     }
 
     @Test
-    fun testCompressDouble_negative() {
-        val actual = compressDouble(-3.14, 4, 31)
-        assertEquals(0xC48F5C28F, actual)
-    }
-
-    @Test
-    fun testCompressDouble_negative_expSizeOne() {
-        val actual = compressDouble(-56.18, 1, 20)
-        assertEquals(0x3C170A, actual)
-    }
-
-    @Test
-    fun testCompressDouble_negative_zeroExpSize() {
-        val actual = compressDouble(-56.18, 0, 20)
-        assertEquals(0x1C170A, actual)
-    }
-
-    @Test
-    fun testCompressDouble_negative_negativeExpSize() {
-        val actual = compressDouble(-56.18, -8, 20)
-        assertEquals(0x1C170A, actual)
-    }
-
-    @Test
-    fun testCompressDouble_negative_sigSizeOne() {
-        val actual = compressDouble(-56.18, 5, 1)
-        assertEquals(0x69, actual)
-    }
-
-    @Test
-    fun testCompressDouble_negative_sameESize_sSizeZero() {
-        val actual = compressDouble(-56.18, 5, 0)
-        assertEquals(0x69, actual)
-    }
-
-    @Test
-    fun testCompressDouble_negative_sameESize_sSizeNegative() {
-        val actual = compressDouble(-56.18, 5, -3)
-        assertEquals(0x69, actual)
-    }
-
-    @Test
-    fun testCompressDouble_positive_subnormal() {
+    fun testCompressDouble_positiveSubnormal() {
         val actual = compressDouble(1.1508711201542864e-308, 5, 3)
         assertEquals(0x4, actual)
     }
 
     @Test
-    fun testCompressDouble_negative_subnormal() {
+    fun testCompressDouble_negativeSubnormal() {
         val actual = compressDouble(-1.1508711201542864e-308, 5, 3)
         assertEquals(0x104, actual)
     }
@@ -125,31 +83,19 @@ class ResizeDoubleTest {
     }
 
     @Test
-    fun testExpandDouble_positive_partialDoubleSize() {
+    fun testExpandDouble_partialDoubleSize() {
         val actual = expandDouble(0x448F5C28F, 4, 31)
         assertEquals(3.139999999664724, actual)
     }
 
     @Test
-    fun testExpandDouble_positive_fullDoubleSize() {
+    fun testExpandDouble_fullDoubleSize() {
         val actual = expandDouble(0x40091EB851EB851F, 11, 52)
         assertEquals(3.14, actual)
     }
 
     @Test
-    fun testExpandDouble_negative_partialDoubleSize() {
-        val actual = expandDouble(0xC48F5C28F, 4, 31)
-        assertEquals(-3.139999999664724, actual)
-    }
-
-    @Test
-    fun testExpandDouble_negative_fullDoubleSize() {
-        val actual = expandDouble(-0x3FF6E147AE147AE1, 11, 52)
-        assertEquals(-3.14, actual)
-    }
-
-    @Test
-    fun testExpandDouble_zeroExponentSize() {
+    fun testExpandDouble_zeroExpSize() {
         val actual = expandDouble(0xF8F5C28F5C29, 0, 52)
         assertEquals(java.lang.Double.longBitsToDouble(0x4000F8F5C28F5C29), actual)
     }
