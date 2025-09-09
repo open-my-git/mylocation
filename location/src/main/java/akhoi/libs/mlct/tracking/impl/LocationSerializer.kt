@@ -3,8 +3,8 @@ package akhoi.libs.mlct.tracking.impl
 import akhoi.libs.mlct.location.model.Location
 import akhoi.libs.mlct.tools.ByteConcat
 import akhoi.libs.mlct.tools.ByteConcatReader
-import akhoi.libs.mlct.tools.compactDouble
-import akhoi.libs.mlct.tools.restoreDouble
+import akhoi.libs.mlct.tools.compressDouble
+import akhoi.libs.mlct.tools.expandDouble
 
 internal interface LocationSerializer {
     fun serialize(locations: List<Location>): ByteArray
@@ -17,16 +17,16 @@ internal class TrackingLocationSerializerV1(private val startTime: Long) : Locat
         locations.forEach { (elapsedTime, latitude, longitude, altitude, speed) ->
             val timeSinceStarted = elapsedTime - startTime
             byteConcat.appendLong(timeSinceStarted, TIME_FIELDSIZE)
-            val compactLat = compactDouble(latitude, 4, 31)
+            val compactLat = compressDouble(latitude, 4, 31)
             byteConcat.appendLong(compactLat, LAT_FIELDSIZE)
-            val compactLong = compactDouble(longitude, 4, 31)
+            val compactLong = compressDouble(longitude, 4, 31)
             byteConcat.appendLong(compactLong, LONG_FIELDSIZE)
-            val compactAlt = compactDouble(altitude, 6, 29)
+            val compactAlt = compressDouble(altitude, 6, 29)
             byteConcat.appendLong(compactAlt, ALT_FIELDSIZE)
             val rawSpeed = java.lang.Float.floatToRawIntBits(speed)
             byteConcat.appendInt(rawSpeed, SPEED_FIELDSIZE)
         }
-        return byteConcat.content
+        return byteConcat.getContent()
     }
 
     override fun deserialize(bytes: ByteArray): List<Location> {
@@ -42,9 +42,9 @@ internal class TrackingLocationSerializerV1(private val startTime: Long) : Locat
             locations.add(
                 Location(
                     elapsedTime,
-                    restoreDouble(latitude, 4, 31),
-                    restoreDouble(longitude, 4, 31),
-                    restoreDouble(altitude, 6, 29),
+                    expandDouble(latitude, 4, 31),
+                    expandDouble(longitude, 4, 31),
+                    expandDouble(altitude, 6, 29),
                     java.lang.Float.intBitsToFloat(speed)
                 )
             )

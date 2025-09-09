@@ -6,7 +6,7 @@ import akhoi.libs.mlct.location.LocationSource
 import akhoi.libs.mlct.location.model.Location
 import akhoi.libs.mlct.location.model.LocationRequest
 import akhoi.libs.mlct.tools.KeyValuePreferences
-import akhoi.libs.mlct.tools.contains
+import akhoi.libs.mlct.tools.compare
 import akhoi.libs.mlct.tracking.TrackingStateKeys.KEY_STATUS
 import akhoi.libs.mlct.tracking.impl.TrackingStatus
 import android.annotation.SuppressLint
@@ -22,7 +22,6 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
 import androidx.annotation.DrawableRes
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -95,7 +94,7 @@ class TrackingService : Service() {
         if (intent == null) {
             mainScope.launch {
                 // service restarts after the process was killed
-                if (trackingStatePreferences.contains(KEY_STATUS, TrackingStatus.RESUMED)) {
+                if (trackingStatePreferences.compare(KEY_STATUS, TrackingStatus.RESUMED)) {
                     onActionResume(null)
                 }
             }
