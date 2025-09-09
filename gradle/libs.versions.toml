@@ -4,6 +4,7 @@ kotlin = "2.2.0"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
+test-runner = "1.1.0"
 espressoCore = "3.6.1"
 appcompat = "1.7.1"
 material = "1.12.0"
@@ -19,6 +20,11 @@ google-maps-utils = "3.14.0"
 dagger = "2.57"
 
 ksp = "2.2.0-2.0.2"
+activity = "1.8.0"
+constraintlayout = "2.1.4"
+
+mapbox-java = "7.3.1"
+mapbox-maps = "11.9.1"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -26,12 +32,14 @@ material = { group = "com.google.android.material", name = "material", version.r
 
 playservices-location = { module = "com.google.android.gms:play-services-location", version.ref = "playservices-location" }
 kotlinx-coroutines-playservices = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockito-kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "test-runner" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
@@ -39,6 +47,11 @@ google-maps-utils = { module = "com.google.maps.android:android-maps-utils", ver
 
 dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
 dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+
+mapbox-java-services = { module = "com.mapbox.mapboxsdk:mapbox-sdk-services", version.ref = "mapbox-java" }
+mapbox-maps = { module = "com.mapbox.maps:android", version.ref = "mapbox-maps" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
