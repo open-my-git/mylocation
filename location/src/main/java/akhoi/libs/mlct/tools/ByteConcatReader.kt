@@ -4,36 +4,36 @@ import kotlin.math.max
 import kotlin.math.min
 
 class ByteConcatReader(private val content: ByteArray) {
-    private var position: Long = 0L
+    private var byte: Int = 0
+    private var position: Int = 0
 
     fun readInt(size: Int): Int {
         var remaining = max(min(size, 32), 0)
         if (remaining == 0) return 0
 
-        var byte = (position shr 3).toInt()
-        val remainder = 8 - (position and 7).toInt()
+        val remainder = 8 - position
         var readSize = min(remaining, remainder)
-        var result = readByte(0, byte, readSize, remainder)
+        var result = readByte(0, readSize, remainder)
         remaining -= readSize
         if (remaining <= 0) return result
 
         readSize = min(remaining, 8)
-        result = readByte(result, ++byte, readSize, 8)
+        result = readByte(result, readSize, 8)
         remaining -= readSize
         if (remaining <= 0) return result
 
         readSize = min(remaining, 8)
-        result = readByte(result, ++byte, readSize, 8)
+        result = readByte(result, readSize, 8)
         remaining -= readSize
         if (remaining <= 0) return result
 
         readSize = min(remaining, 8)
-        result = readByte(result, ++byte, readSize, 8)
+        result = readByte(result, readSize, 8)
         remaining -= readSize
         if (remaining <= 0) return result
 
         readSize = min(remaining, 8)
-        result = readByte(result, byte + 1, readSize, 8)
+        result = readByte(result, readSize, 8)
 
         return result
     }
@@ -64,11 +64,13 @@ class ByteConcatReader(private val content: ByteArray) {
         position += count
     }
 
-    private inline fun readByte(value: Int, byteIndex: Int, size: Int, remainder: Int): Int {
-        if (byteIndex >= content.size) return value
+    private inline fun readByte(value: Int, size: Int, remainder: Int): Int {
+        if (byte >= content.size) return value
 
-        val read = ((1 shl size) - 1) and (content[byteIndex].toInt() ushr (remainder - size))
-        position += size
+        val read = ((1 shl size) - 1) and (content[byte].toInt() ushr (remainder - size))
+        val nextBytePosition = position + size
+        byte += nextBytePosition shr 3
+        position = nextBytePosition and 7
         return (value shl size) or read
     }
 }
