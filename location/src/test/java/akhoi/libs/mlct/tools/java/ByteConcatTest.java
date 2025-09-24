@@ -118,7 +118,7 @@ public class ByteConcatTest {
         byteConcat.appendInt(0x22222222, 32);
         byte[] expected = new byte[]{0x22, 0x22, 0x22, 0x22};
         assertArrayEquals(expected, byteConcat.getContent());
-        assertEquals(4, byteConcat.getBucketSize());
+        assertEquals(4, byteConcat.getContentSize());
     }
 
     @Test
@@ -127,7 +127,7 @@ public class ByteConcatTest {
         byteConcat.appendInt(0x22222222, 32);
         byte[] expected = new byte[]{0x22, 0x22, 0x22, 0x22};
         assertArrayEquals(expected, byteConcat.getContent());
-        assertEquals(4, byteConcat.getBucketSize());
+        assertEquals(4, byteConcat.getContentSize());
     }
 
     @Test(expected = OutOfMemoryError.class)
@@ -239,6 +239,12 @@ public class ByteConcatTest {
         assertArrayEquals(new byte[]{
                 0x18, (byte) 0x96, 0x01, 0x47, 0x01, 0x63, 0x40, 0x04
         }, byteConcat.getContent());
-        assertEquals(8, byteConcat.getBucketSize());
+        assertEquals(8, byteConcat.getContentSize());
+    }
+
+    @Test
+    public void testConstructor_negativeInitCap() {
+        ByteConcat byteConcat = new ByteConcat(-15);
+        assertEquals(2, byteConcat.getContentSize());
     }
 }
