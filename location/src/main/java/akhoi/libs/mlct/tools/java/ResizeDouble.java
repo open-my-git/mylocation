@@ -47,8 +47,6 @@ public final class ResizeDouble {
         long desSignificand = (src & srcSignificandMask) << shiftLeft >> shiftRight & desSignificandMask;
 
         long desSign = (src >> (srcActualExpSize + srcActualSigSize)) & 1L;
-        return (desSign << (desActualExpSize + desActualSigSize))
-                | (desExponent << desActualSigSize)
-                | desSignificand;
+        return (desSign << desActualExpSize | desExponent) << desActualSigSize | desSignificand;
     }
 }

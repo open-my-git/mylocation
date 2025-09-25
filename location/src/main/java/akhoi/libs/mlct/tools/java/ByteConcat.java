@@ -58,7 +58,7 @@ public class ByteConcat {
                 }
                 content = Arrays.copyOf(content, capableSize);
             }
-            content[position] = (byte) (content[position] | (value << (32 - size) >>> (32 - remainder)));
+            content[position] = (byte) (content[position] | value << (32 - size) >>> (32 - remainder));
             int nextBytePos = posPartial + Math.min(size, remainder);
             position += nextBytePos >>> 3;
             posPartial = nextBytePos & 7;
