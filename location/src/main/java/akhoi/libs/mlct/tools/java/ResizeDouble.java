@@ -14,21 +14,13 @@ public final class ResizeDouble {
         return Double.longBitsToDouble(resized);
     }
 
-    public static long resizeDouble(long src) {
-        return resizeDouble(src, 11, 52, 11, 52);
-    }
-
-    public static long resizeDouble(long src, int srcExpSize, int srcSigSize) {
-        return resizeDouble(src, srcExpSize, srcSigSize, 11, 52);
-    }
-
     public static long resizeDouble(long src, int srcExpSize, int srcSigSize, int desExpSize, int desSigSize) {
-        int srcActualExpSize = clamp(srcExpSize, 0, 11);
-        int srcActualSigSize = clamp(srcSigSize, 1, 52);
-        int desActualExpSize = clamp(desExpSize, 0, 11);
-        int desActualSigSize = clamp(desSigSize, 1, 52);
+        int srcActualExpSize = Math.clamp(srcExpSize, 0, 11);
+        int srcActualSigSize = Math.clamp(srcSigSize, 1, 52);
+        int desActualExpSize = Math.clamp(desExpSize, 0, 11);
+        int desActualSigSize = Math.clamp(desSigSize, 1, 52);
 
-        long desExpMask = (desActualExpSize == 0) ? 0L : (1L << desActualExpSize) - 1L;
+        long desExpMask = (1L << desActualExpSize) - 1L;
         long desBias = desExpMask >> 1;
         long desExponent;
         if (desActualExpSize == 0) {
@@ -38,7 +30,7 @@ public final class ResizeDouble {
         } else {
             long srcExpMask = (1L << srcActualExpSize) - 1L;
             long srcBias = srcExpMask >> 1;
-            long srcExponent = (src >> srcActualSigSize) & srcExpMask;
+            long srcExponent = src >> srcActualSigSize & srcExpMask;
             if (srcExponent == 0L) {
                 desExponent = 0L;
             } else if (srcExponent == srcExpMask) {
@@ -50,22 +42,11 @@ public final class ResizeDouble {
 
         long srcSignificandMask = (1L << srcActualSigSize) - 1L;
         long desSignificandMask = (1L << desActualSigSize) - 1L;
-        long desSignificand = src & srcSignificandMask;
         int shiftLeft = Math.max(desActualSigSize - srcActualSigSize, 0);
         int shiftRight = Math.max(srcActualSigSize - desActualSigSize, 0);
-        if (shiftLeft > 0) {
-            desSignificand <<= shiftLeft;
-        }
-        if (shiftRight > 0) {
-            desSignificand >>>= shiftRight;
-        }
-        desSignificand &= desSignificandMask;
+        long desSignificand = (src & srcSignificandMask) << shiftLeft >> shiftRight & desSignificandMask;
 
         long desSign = (src >> (srcActualExpSize + srcActualSigSize)) & 1L;
-        return (desSign << desActualExpSize) | (desExponent << desActualSigSize) | desSignificand;
-    }
-
-    private static int clamp(int value, int min, int max) {
-        return Math.min(Math.max(value, min), max);
+        return (desSign << desActualExpSize | desExponent) << desActualSigSize | desSignificand;
     }
 }
