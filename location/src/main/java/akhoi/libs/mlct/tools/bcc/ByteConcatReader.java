@@ -1,4 +1,4 @@
-package akhoi.libs.mlct.tools.java;
+package akhoi.libs.mlct.tools.bcc;
 
 public class ByteConcatReader {
     private final byte[] content;
@@ -10,7 +10,7 @@ public class ByteConcatReader {
     }
 
     public int readInt(int size) {
-        int remaining = Math.max(Math.min(size, 32), 0);
+        int remaining = Math.clamp(size, 0, 32);
         if (remaining == 0) {
             return 0;
         }

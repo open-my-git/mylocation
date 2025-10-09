@@ -1,4 +1,4 @@
-package akhoi.libs.mlct.tools.java;
+package akhoi.libs.mlct.tools.bcc;
 
 import org.junit.Test;
 

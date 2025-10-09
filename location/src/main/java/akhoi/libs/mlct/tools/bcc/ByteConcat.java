@@ -1,4 +1,4 @@
-package akhoi.libs.mlct.tools.java;
+package akhoi.libs.mlct.tools.bcc;
 
 import androidx.annotation.VisibleForTesting;
 
@@ -6,7 +6,6 @@ import java.util.Arrays;
 
 public class ByteConcat {
     private static final int MIN_CAPACITY = 2;
-    private final Object contentLock = new Object();
     private byte[] content;
     private int position;
     private int posPartial;
@@ -26,7 +25,7 @@ public class ByteConcat {
     }
 
     public void appendInt(int value, int size) {
-        int actualSize = Math.max(Math.min(size, 32), 0);
+        int actualSize = Math.clamp(size, 0, 32);
         if (actualSize == 0) {
             return;
         }
@@ -50,19 +49,17 @@ public class ByteConcat {
         if (size <= 0) {
             return size;
         }
-        synchronized (contentLock) {
-            if (position == content.length) {
-                int capableSize = Math.max(content.length << 1, content.length | (content.length >> 1));
-                if (capableSize < content.length) {
-                    throw new OutOfMemoryError("Bucket size overflow, current: " + content.length + ", next: " + capableSize);
-                }
-                content = Arrays.copyOf(content, capableSize);
+        if (position == content.length) {
+            int capableSize = Math.max(content.length << 1, content.length | (content.length >> 1));
+            if (capableSize < content.length) {
+                throw new OutOfMemoryError("Bucket size overflow, current: " + content.length + ", next: " + capableSize);
             }
-            content[position] = (byte) (content[position] | value << (32 - size) >>> (32 - remainder));
-            int nextBytePos = posPartial + Math.min(size, remainder);
-            position += nextBytePos >>> 3;
-            posPartial = nextBytePos & 7;
+            content = Arrays.copyOf(content, capableSize);
         }
+        content[position] = (byte) (content[position] | value << (32 - size) >>> (32 - remainder));
+        int nextBytePos = posPartial + Math.min(size, remainder);
+        position += nextBytePos >>> 3;
+        posPartial = nextBytePos & 7;
         return size - remainder;
     }
 
