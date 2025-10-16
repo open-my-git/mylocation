@@ -69,6 +69,6 @@ internal class TrackingLocationSerializerV1(private val startTime: Long) : Locat
 
         private const val SPEED_FIELDSIZE = 32
 
-        private const val TOTAL_BYTES = (TIME_FIELDSIZE + LAT_FIELDSIZE + LONG_FIELDSIZE + ALT_EXP_SIZE + SPEED_FIELDSIZE) / 8
+        private const val TOTAL_BYTES = (TIME_FIELDSIZE + LAT_FIELDSIZE + LONG_FIELDSIZE + ALT_FIELDSIZE + SPEED_FIELDSIZE) / 8
     }
 }
