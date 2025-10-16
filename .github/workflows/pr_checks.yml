@@ -17,12 +17,11 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: oracle
           java-version: 17
-          cache: gradle
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Build Debug APK
+        run: bash ./gradlew assembleDebug --stacktrace
 
       - name: Run tests
-        run: ./gradlew test
+        run: bash ./gradlew testDebugUnitTest
