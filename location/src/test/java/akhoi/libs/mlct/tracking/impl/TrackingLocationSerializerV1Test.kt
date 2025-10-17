@@ -1,4 +1,4 @@
-package akhoi.libs.tracking.impl
+package akhoi.libs.mlct.tracking.impl
 
 import akhoi.libs.mlct.location.model.Location
 import akhoi.libs.mlct.tracking.impl.TrackingLocationSerializerV1
